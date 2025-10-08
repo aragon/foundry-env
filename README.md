@@ -1,8 +1,5 @@
 # Aragon Foundry `.env` templates
 
-[![Aragon](https://img.shields.io/badge/Aragon-Official-blue?logo=aragon)](https://aragon.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 **A repository for standardized `.env` templates** used in Foundry-based Solidity projects.
 Save time. Avoid misconfigurations.
 
