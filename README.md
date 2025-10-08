@@ -3,7 +3,7 @@
 **A repository for standardized `.env` templates** used in Foundry-based Solidity projects.
 Save time. Avoid misconfigurations.
 
-## 📦 Overview
+## Overview
 
 This repository provides pre-configured `.env` and `foundry.toml` files for Foundry projects interacting with the Aragon OSx protocol. It centralizes:
 
@@ -14,13 +14,13 @@ This repository provides pre-configured `.env` and `foundry.toml` files for Foun
 
 Use these templates to bootstrap your Aragon OSx repository quickly — no more redundant searches or copying from old repos!
 
-## 📁 Included Files
+## Included Files
 
 Every supported network has a template env file located on the [./networks/](./networks) folder.
 
-💡 Use `cp networks/.env.mainnet path/to/project/.env` to start a new project. Then define the private values as needed.
+💡 Use `cp networks/mainnet/.env path/to/project/.env` to start a new project. Then define the private values as needed.
 
-## 🔧 Key Variables
+## Key Variables
 
 ### Configuration
 
@@ -74,12 +74,13 @@ BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"  # Ex
 PINATA_JWT=""
 ```
 
-## 📚 Documentation & Support
+## Documentation & Support
 
 - [Aragon OSx Docs](https://docs.aragon.org/osx/)
 - [TokenVoting Plugin](https://github.com/aragon/token-voting-plugin)
 - [Foundry Book](https://getfoundry.sh/)
 
-## 🤝 Contributing
+## Contributing
 
 Found a missing address or outdated config? Open an issue or PR!
+
