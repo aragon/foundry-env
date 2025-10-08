@@ -8,7 +8,7 @@ Save time. Avoid misconfigurations.
 
 ## 📦 Overview
 
-This repository provides **pre-configured `.env` templates** for Foundry projects interacting with the [Aragon OSx](https://aragon.org/osx/) protocol. It centralizes:
+This repository provides pre-configured `.env` and `foundry.toml` files for Foundry projects interacting with the Aragon OSx protocol. It centralizes:
 
 - Network configuration (RPC URLs, chain IDs, explorers)
 - Source code verification parameters for Etherscan and other block explorers
