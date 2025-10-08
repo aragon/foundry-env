@@ -62,15 +62,17 @@ PLUGIN_SETUP_PROCESSOR_ADDRESS="0xE978942c691e43f65c1B7c7F8f1dc8cDF061B13f"
 # ---------------------------------------------------
 
 # Existing repo (new build)
-PLUGIN_REPO_ADDRESS="0xb7401cD221ceAFC54093168B814Cc3d42579287f"
+PLUGIN_REPO_ADDRESS="0xb7401cD221ceAFC54093168B814Cc3d42579287f"  # Example for TokenVoting
 MANAGEMENT_DAO_MULTISIG_ADDRESS="0x0673c13D48023efA609C20E5E351763B99Dd67DE"
 
 # New plugin repo (first build)
-PLUGIN_ENS_SUBDOMAIN="" # Optional (a random one is used if empty)
+PLUGIN_ENS_SUBDOMAIN="" # A random value is used if empty
 PLUGIN_REPO_MAINTAINER_ADDRESS=""
 
-RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"  # Example
-BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"  # Example
+RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"  # Example for TokenVoting
+BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"  # Example for TokenVoting
+
+# Other
 
 PINATA_JWT=""
 ```
