@@ -1,14 +1,11 @@
 # Aragon Foundry `.env` templates
 
-[![Aragon](https://img.shields.io/badge/Aragon-Official-blue?logo=aragon)](https://aragon.org)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
 **A repository for standardized `.env` templates** used in Foundry-based Solidity projects.
 Save time. Avoid misconfigurations.
 
-## 📦 Overview
+## Overview
 
-This repository provides **pre-configured `.env` templates** for Foundry projects interacting with the [Aragon OSx](https://aragon.org/osx/) protocol. It centralizes:
+This repository provides pre-configured `.env` and `foundry.toml` files for Foundry projects interacting with the Aragon OSx protocol. It centralizes:
 
 - Network configuration (RPC URLs, chain IDs, explorers)
 - Source code verification parameters for Etherscan and other block explorers
@@ -17,13 +14,13 @@ This repository provides **pre-configured `.env` templates** for Foundry project
 
 Use these templates to bootstrap your Aragon OSx repository quickly — no more redundant searches or copying from old repos!
 
-## 📁 Included Files
+## Included Files
 
 Every supported network has a template env file located on the [./networks/](./networks) folder.
 
-💡 Use `cp networks/.env.mainnet path/to/project/.env` to start a new project. Then define the private values as needed.
+💡 Use `cp networks/mainnet/.env path/to/project/.env` to start a new project. Then define the private values as needed.
 
-## 🔧 Key Variables
+## Key Variables
 
 ### Configuration
 
@@ -62,25 +59,28 @@ PLUGIN_SETUP_PROCESSOR_ADDRESS="0xE978942c691e43f65c1B7c7F8f1dc8cDF061B13f"
 # ---------------------------------------------------
 
 # Existing repo (new build)
-PLUGIN_REPO_ADDRESS="0xb7401cD221ceAFC54093168B814Cc3d42579287f"
+PLUGIN_REPO_ADDRESS="0xb7401cD221ceAFC54093168B814Cc3d42579287f"  # Example for TokenVoting
 MANAGEMENT_DAO_MULTISIG_ADDRESS="0x0673c13D48023efA609C20E5E351763B99Dd67DE"
 
 # New plugin repo (first build)
-PLUGIN_ENS_SUBDOMAIN="" # Optional (a random one is used if empty)
+PLUGIN_ENS_SUBDOMAIN="" # A random value is used if empty
 PLUGIN_REPO_MAINTAINER_ADDRESS=""
 
-RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"  # Example
-BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"  # Example
+RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"  # Example for TokenVoting
+BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"  # Example for TokenVoting
+
+# Other
 
 PINATA_JWT=""
 ```
 
-## 📚 Documentation & Support
+## Documentation & Support
 
 - [Aragon OSx Docs](https://docs.aragon.org/osx/)
 - [TokenVoting Plugin](https://github.com/aragon/token-voting-plugin)
 - [Foundry Book](https://getfoundry.sh/)
 
-## 🤝 Contributing
+## Contributing
 
 Found a missing address or outdated config? Open an issue or PR!
+
