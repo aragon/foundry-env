@@ -3,6 +3,21 @@
 **A repository for standardized `.env` templates** used in Foundry-based Solidity projects.
 Save time. Avoid misconfigurations.
 
+
+```sh
+git submodule add git@github.com:aragon/foundry-env.git lib/foundry-env
+```
+
+Create a Makefile like:
+
+```make
+include lib/foundry-env/base.mk
+```
+
+```sh
+make init network=sepolia
+```
+
 ## Overview
 
 This repository provides pre-configured `.env` and `foundry.toml` files for Foundry projects interacting with the Aragon OSx protocol. It centralizes:
@@ -83,4 +98,3 @@ PINATA_JWT=""
 ## Contributing
 
 Found a missing address or outdated config? Open an issue or PR!
-
