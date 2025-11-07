@@ -11,7 +11,33 @@ git submodule add git@github.com:aragon/foundry-env.git lib/foundry-env
 Create a Makefile like:
 
 ```make
+include .env
 include lib/foundry-env/base.mk
+
+# Name of the solidity contract
+DEPLOYMENT_SCRIPT := DeployTokenVoting
+
+## Custom commands
+
+my-task: ## Comment here
+	@echo "Hello from $(NETWORK_NAME)"
+```
+
+Create a `.env` file with your secrets:
+
+```env
+# Required
+# ---------------------
+DEPLOYMENT_PRIVATE_KEY="0x..."
+ETHERSCAN_API_KEY="..."
+
+# Optional
+# ---------------------
+ALCHEMY_API_KEY=""
+INFURA_API_KEY=""
+
+# REFUND_ADDRESS="0x..."  # If using a burner wallet
+# PINATA_JWT="" # If pinning data on IPFS
 ```
 
 ```sh
@@ -20,20 +46,18 @@ make init network=sepolia
 
 ## Overview
 
-This repository provides pre-configured `.env` and `foundry.toml` files for Foundry projects interacting with the Aragon OSx protocol. It centralizes:
+This repository provides a pre-configured environment for all the networks supported by Aragon OSx protocol. It centralizes:
 
 - Network configuration (RPC URLs, chain IDs, explorers)
 - Source code verification parameters for Etherscan and other block explorers
 - Commonly used Aragon OSx contract addresses (DAOFactory, PluginRepoFactory, PluginSetupProcessor)
 - Example environment variables for the **TokenVoting plugin**
 
-Use these templates to bootstrap your Aragon OSx repository quickly — no more redundant searches or copying from old repos!
+Use these templates to bootstrap your Aragon OSx repository quickly — no more redundant searches or copying from old repos.
 
 ## Included Files
 
-Every supported network has a template env file located on the [./networks/](./networks) folder.
-
-💡 Use `cp networks/mainnet/.env path/to/project/.env` to start a new project. Then define the private values as needed.
+Every supported network has an env file located on the [./networks/](./networks) folder.
 
 ## Key Variables
 
@@ -42,11 +66,9 @@ Every supported network has a template env file located on the [./networks/](./n
 ```env
 # NETWORK AND ACCOUNT(s)
 # ---------------------------------------------------
-DEPLOYMENT_PRIVATE_KEY="" # REQUIRED
-REFUND_ADDRESS=""
 
 # Used by Foundry
-RPC_URL="https://eth-mainnet.g.alchemy.com/v2/__API_KEY__"
+RPC_URL="https://eth-mainnet.g.alchemy.com/v2/__ALCHEMY_API_KEY__"
 CHAIN_ID="1"
 
 # Used for log file names
@@ -55,8 +77,6 @@ NETWORK_NAME="mainnet"
 # SOURCE VERIFICATION (https://etherscan.io/)
 # ---------------------------------------------------
 VERIFIER="etherscan"
-
-ETHERSCAN_API_KEY="" # REQUIRED
 
 # DEPLOYED DEPENDENCIES (OSX)
 # ---------------------------------------------------
@@ -83,10 +103,6 @@ PLUGIN_REPO_MAINTAINER_ADDRESS=""
 
 RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"  # Example for TokenVoting
 BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"  # Example for TokenVoting
-
-# Other
-
-PINATA_JWT=""
 ```
 
 ## Documentation & Support

@@ -224,7 +224,7 @@ resume: test ## Retry a pending deployment, verify the code and write to ./artif
 	@echo "Retrying the deployment"
 	@mkdir -p $(LOGS_FOLDER) $(ARTIFACTS_FOLDER)
 
-	@make run-script script="script/$(DEPLOYMENT_SCRIPT).s.sol:$(DEPLOYMENT_SCRIPT)" \
+	@make run-script script="$(DEPLOYMENT_SCRIPT)" \
 		extra_params="--resume" \
 	    2>&1 | tee -a $(DEPLOYMENT_LOG_FILE)
 
