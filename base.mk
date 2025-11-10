@@ -179,11 +179,11 @@ test-unint: ## Run unit + integration tests         [optional: v="v1_2_0"]
 
 .PHONY: test-invariant
 test-invariant: ## Run invariant tests                  [optional: v="v1_2_0"]
-	@make local-test path="test/$(v)/invariant/**/*.sol" extra_params="--show-progress"
+	@make local-test path="test/$(v)/invariant/**/*.sol" extra_args="--show-progress"
 
 .PHONY: test-upgrades
 test-upgrades: ## Run regression/upgrade tests         [optional: v="v1_2_0"]
-	@make local-test path="test/$(v)/upgrade/**/*.sol" extra_params="--force --ffi"
+	@make local-test path="test/$(v)/upgrade/**/*.sol" extra_args="--force --ffi"
 
 ##
 
@@ -222,14 +222,14 @@ test-coverage: report/index.html ## Generate an HTML test coverage report under 
 predeploy: ## Simulate a plugin deployment
 	@echo "Simulating the deployment"
 
-	@make simulate-script script="$(DEPLOYMENT_SCRIPT)"
+	@make simulate-script name="$(DEPLOYMENT_SCRIPT)"
 
 .PHONY: deploy
 deploy: test ## Deploy the plugin, verify the code and write to ./artifacts
 	@echo "Starting the deployment"
 	@mkdir -p $(LOGS_FOLDER) $(ARTIFACTS_FOLDER)
 
-	@make run-script script="$(DEPLOYMENT_SCRIPT)" \
+	@make run-script name="$(DEPLOYMENT_SCRIPT)" \
 	    2>&1 | tee -a $(DEPLOYMENT_LOG_FILE)
 
 	echo "Logs saved in $(DEPLOYMENT_LOG_FILE)"
@@ -239,8 +239,8 @@ resume: test ## Retry a pending deployment, verify the code and write to ./artif
 	@echo "Retrying the deployment"
 	@mkdir -p $(LOGS_FOLDER) $(ARTIFACTS_FOLDER)
 
-	@make run-script script="$(DEPLOYMENT_SCRIPT)" \
-		extra_params="--resume" \
+	@make run-script name="$(DEPLOYMENT_SCRIPT)" \
+		extra_args="--resume" \
 	    2>&1 | tee -a $(DEPLOYMENT_LOG_FILE)
 
 	echo "Logs saved in $(DEPLOYMENT_LOG_FILE)"
@@ -335,37 +335,37 @@ local-test: export ETHERSCAN_API_KEY:=""
 .PHONY: local-test
 local-test:
 	@echo ETHERSCAN_API_KEY=\"\"
-	forge test $(FORGE_BUILD_CUSTOM_PARAMS) --match-path "$(path)" $(extra_params)
+	forge test $(FORGE_BUILD_CUSTOM_PARAMS) --match-path "$(path)" $(extra_args)
 
 
 # Set the SIMULATE variable so that launched scripts can skip writing deployment artifacts
 simulate-script: export SIMULATION:=true
 
 # Example:
-# make simulate-script script="MyScript.s.sol:MyScript"
+# make simulate-script name="MyScriptName"
 .PHONY: simulate-script
 simulate-script:
 	@echo "SIMULATION=true"
-	forge script $(script) \
+	forge script $(name) \
 		--rpc-url $(RPC_URL) \
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS)
 
 # Example:
-# make run-script script="MyScript.s.sol:MyScript"
-# make run-script script="MyScript.s.sol:MyScript" extra_params="--resume"
+# make run-script name="MyScriptName"
+# make run-script name="MyScriptName" extra_args="--resume"
 .PHONY: run-script
 run-script: test
-	forge script $(script) \
+	forge script $(name) \
 		--rpc-url $(RPC_URL) \
 		--retries 10 \
-		--delay 8 \
+		--delay 10 \
 		--broadcast \
 		--verify \
 		$(VERIFIER_PARAMS) \
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS) \
-		$(extra_params)
+		$(extra_args)
 
 .PHONY: install-foundry
 install-foundry:

@@ -32,7 +32,7 @@ Create a minimal `Makefile` on your project root:
 # .env is imported by base.mk
 include lib/foundry-env/base.mk
 
-# Define your main deployment script here
+# The (contract) name of your deployment script
 DEPLOYMENT_SCRIPT := DeployTokenVoting
 ```
 
@@ -113,10 +113,9 @@ Deployment:
 If your project needs custom commands, edit your `Makefile` and append a task as follows:
 
 ```make
-include .env
 include lib/foundry-env/base.mk
 
-# Define your main deployment script here
+# The (contract) name of your deployment script
 DEPLOYMENT_SCRIPT := DeployTokenVoting
 
 ## Custom commands:
@@ -124,6 +123,10 @@ DEPLOYMENT_SCRIPT := DeployTokenVoting
 .PHONY: my-command
 my-command: ## Description of my-command
 	echo "You called $(@)"
+
+.PHONY: my-script
+my-script: ## Running a script by name
+	make run-script name=MyCustomScript
 ```
 
 ## What's included
