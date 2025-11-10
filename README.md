@@ -32,8 +32,8 @@ Create a minimal `Makefile` on your project root:
 # .env is imported by base.mk
 include lib/foundry-env/base.mk
 
-# The (contract) name of your deployment script
-DEPLOYMENT_SCRIPT := DeployTokenVoting
+# The contract name of your deployment script (default)
+DEPLOYMENT_SCRIPT ?= DeployTokenVoting
 ```
 
 Create an `.env` file with the following secrets:
@@ -46,9 +46,14 @@ ETHERSCAN_API_KEY="..."
 
 # Optional
 # ---------------------
-ALCHEMY_API_KEY=""  # When the network's RPC_URL uses an Alchemy endpoint
 
-# REFUND_ADDRESS="0x..."  # If using a burner wallet
+# When the network's RPC_URL uses an Alchemy endpoint
+ALCHEMY_API_KEY=""
+
+# FORK_BLOCK_NUMBER=12345
+
+# If using a burner wallet
+REFUND_ADDRESS="0x..."
 ```
 
 Include any additional settings that your scripts need:
@@ -56,11 +61,11 @@ Include any additional settings that your scripts need:
 ```env
 PLUGIN_REPO_ADDRESS="0x1AeD2BEb470aeFD65B43f905Bd5371b1E4749d18" # network dependent
 PLUGIN_REPO_MAINTAINER_ADDRESS="0x051D2BEb470aeFD65B43f905Bd5371b1E4749d14" # network dependent
-# PLUGIN_ENS_SUBDOMAIN=""
 
 RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"
 BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"
 
+# PLUGIN_ENS_SUBDOMAIN=""
 # PINATA_JWT=""
 ```
 
@@ -165,8 +170,14 @@ If the network's `.env` file provides a value that you need to override, you can
 Env variables are imported in this order:
 
 1. Read `lib/foundry-env/networks/<network>/.env`
-2. Read `.env` (overwrite any defaults from above)
+2. Read your `.env` (this overrides any defaults from above)
 3. Prepare the `make` commands and arguments
+
+You can also override `make` variables by passing them as CLI arguments:
+
+```sh
+make deploy RPC_URL="https://sepolia.drpc.org"
+```
 
 ## Documentation & Support
 

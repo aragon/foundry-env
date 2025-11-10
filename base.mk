@@ -1,6 +1,6 @@
 # NOTE:
 # This file is meant to be imported from the root folder of other repositories.
-# Paths will be relative to the importing path
+# Paths will be relative to the importing project's root path
 
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
@@ -17,13 +17,15 @@ FOUNDRY_ENV_DIR := $(patsubst %/,%,${FOUNDRY_ENV_DIR})
 
 SUPPORTED_VERIFIERS := etherscan blockscout sourcify zksync routescan-mainnet routescan-testnet
 SUPPORTED_NETWORKS := $(shell ls $(FOUNDRY_ENV_DIR)/networks | xargs echo)
+TEST_COVERAGE_SOURCES := $(wildcard test/*.sol test/**/*.sol src/*.sol src/**/*.sol)
 ARTIFACTS_FOLDER := ./artifacts
 LOGS_FOLDER := ./logs
+VERBOSITY ?= -vvv
 
 # Helper functions
 trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
 
-# Remove quotes
+# Clean constants
 VERIFIER := $(call trim_quotes,$(VERIFIER))
 CHAIN_ID := $(call trim_quotes,$(CHAIN_ID))
 NETWORK_NAME := $(call trim_quotes,$(NETWORK_NAME))
@@ -156,65 +158,33 @@ clean: ## Clean the compiler artifacts
 
 ## Testing:
 
-# Giving a default value to the inline filters:
-# - make test             =>  v = "**"
-# - make test v="v1_2_0"  =>  v = "v1_2_0"
-
-test: v ?= **
-test-unint: v ?= **
-test-invariant: v ?= **
-test-upgrades: v ?= **
+test-fork: export RPC_URL:=$(RPC_URL)
+test-coverage: export RPC_URL:=$(RPC_URL)
 
 .PHONY: test
-test: ## Run unit tests                       [optional: v="v1_2_0"]
-	@make local-test path="test/$(v)/unit/**/*.sol"
-
-.PHONY: test-integration
-test-integration: ## Run integration tests                [optional: v="v1_2_0"]
-	@make local-test path="test/$(v)/integration/**/*.sol"
-
-.PHONY: test-unint
-test-unint: ## Run unit + integration tests         [optional: v="v1_2_0"]
-	@make local-test path="test/$(v)/{unit,integration}/**/*.sol"
-
-.PHONY: test-invariant
-test-invariant: ## Run invariant tests                  [optional: v="v1_2_0"]
-	@make local-test path="test/$(v)/invariant/**/*.sol" extra_args="--show-progress"
-
-.PHONY: test-upgrades
-test-upgrades: ## Run regression/upgrade tests         [optional: v="v1_2_0"]
-	@make local-test path="test/$(v)/upgrade/**/*.sol" extra_args="--force --ffi"
-
-##
+test: ## Run all tests (local)
+	@make test-local-path \
+	    extra_args='--no-match-path "./test/*fork*/*.sol"'
 
 .PHONY: test-fork
-test-fork: ## Run fork tests (using RPC_URL)
-	forge test $(FORGE_BUILD_CUSTOM_PARAMS) --rpc-url $(RPC_URL) --match-path './test/*/fork/*.sol'
+test-fork: ## Run all fork tests (exporting RPC_URL env)
+	@make test-path \
+	    extra_args='--match-path "./test/*fork*/*.sol" --rpc-url $(RPC_URL)'
 
-.PHONY: test-fork-mint
-test-fork-mint: ## Run fork tests (minting tokens)
-	@MINT_TEST_TOKENS=true ; make test-fork
-
-.PHONY: test-fork-existing
-test-fork-existing: ## Run fork tests (existing factory)
-	@FORK_TEST_MODE='existing-factory' ; make test-fork
-
-.PHONY: test-fork-exmint
-test-fork-exmint: ## Run fork tests (existing factory + minting tokens)
-	@MINT_TEST_TOKENS=true; FORK_TEST_MODE='existing-factory' ; make test-fork
-
-.PHONY: test-coverage
-test-coverage: report/index.html ## Generate an HTML test coverage report under ./report
-	@which lcov > /dev/null || (echo "Note: lcov can be installed by running 'sudo apt install lcov'" ; exit 1)
-	@echo "Skipping test, script, src/escrow/increasing/delegation and proxylib from the coverage report"
-	forge coverage --match-path "test/v1_4_0/unit/escrow/queue/**/*.sol" --report lcov && \
-		lcov --remove ./lcov.info -o ./lcov.info.pruned \
-			'test/**/*.sol' 'script/**/*.sol' 'test/*.sol' \
-			'script/*.sol' 'src/escrow/increasing/delegation/*.sol' \
-			'src/libs/ProxyLib.sol' && \
-		genhtml lcov.info.pruned -o report --branch-coverage
+test-coverage: report/index.html ## Generate an HTML coverage report under ./report
 	@which open > /dev/null && open report/index.html || true
 	@which xdg-open > /dev/null && xdg-open report/index.html || true
+
+report/index.html: lcov.info.pruned
+	@which lcov > /dev/null || (echo "Note: lcov can be installed by running 'sudo apt install lcov'" ; exit 1)
+	genhtml $(^) -o report
+
+lcov.info.pruned: lcov.info
+	lcov --remove $(^) -o $(@) \
+		'test/**/*.sol' 'test/*.sol' 'script/**/*.sol' 'script/*.sol'
+
+lcov.info: $(TEST_COVERAGE_SOURCES)
+	forge coverage --report lcov
 
 ## Deployment:
 
@@ -249,7 +219,6 @@ resume: test ## Retry a pending deployment, verify the code and write to ./artif
 
 anvil: ## Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER]
 	anvil -f $(RPC_URL) $(FORK_TEST_PARAMS)
-
 
 refund: export DEPLOYMENT_PRIVATE_KEY:=$(DEPLOYMENT_PRIVATE_KEY)
 
@@ -329,15 +298,6 @@ clean-nonce: # make clean-nonce nonce=3
 
 # Internal helpers
 
-# Running the following tests faster, unsetting the API key
-local-test: export ETHERSCAN_API_KEY:=""
-
-.PHONY: local-test
-local-test:
-	@echo ETHERSCAN_API_KEY=\"\"
-	forge test $(FORGE_BUILD_CUSTOM_PARAMS) --match-path "$(path)" $(extra_args)
-
-
 # Set the SIMULATE variable so that launched scripts can skip writing deployment artifacts
 simulate-script: export SIMULATION:=true
 
@@ -366,6 +326,19 @@ run-script: test
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS) \
 		$(extra_args)
+
+# Running local tests faster, unsetting the API key
+test-local-path: export ETHERSCAN_API_KEY:=""
+
+.PHONY: test-local-path
+test-local-path:
+	@echo ETHERSCAN_API_KEY=\"\"
+	forge test $(FORGE_BUILD_CUSTOM_PARAMS) $(VERBOSITY) $(extra_args)
+
+# Test targets (fork ready)
+.PHONY: test-path
+test-path:
+	forge test $(FORGE_BUILD_CUSTOM_PARAMS) $(VERBOSITY) $(extra_args)
 
 .PHONY: install-foundry
 install-foundry:
