@@ -5,10 +5,13 @@
 .DEFAULT_GOAL := help
 SHELL := /bin/bash
 
-# Load the network's .env file as "make" variables (if possible)
+# Load the network's .env file as "make" variables (when possible)
 FOUNDRY_ENV_DIR := $(dir $(filter %/base.mk,$(MAKEFILE_LIST)))
 FOUNDRY_ENV_DIR := $(patsubst %/,%,${FOUNDRY_ENV_DIR})
 -include $(FOUNDRY_ENV_DIR)/.env
+
+# Load the .env file from the project root
+-include .env
 
 # CONSTANTS
 

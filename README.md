@@ -26,10 +26,10 @@ Most Aragon plugins need to:
 git submodule add git@github.com:aragon/foundry-env.git lib/foundry-env
 ```
 
-Create a minimal `Makefile`:
+Create a minimal `Makefile` on your project root:
 
 ```make
-include .env
+# .env is imported by base.mk
 include lib/foundry-env/base.mk
 
 # Define your main deployment script here
@@ -49,7 +49,6 @@ ETHERSCAN_API_KEY="..."
 ALCHEMY_API_KEY=""  # When the network's RPC_URL uses an Alchemy endpoint
 
 # REFUND_ADDRESS="0x..."  # If using a burner wallet
-# PINATA_JWT="" # If pinning data on IPFS
 ```
 
 Include any additional settings that your scripts need:
@@ -61,6 +60,8 @@ PLUGIN_REPO_MAINTAINER_ADDRESS="0x051D2BEb470aeFD65B43f905Bd5371b1E4749d14" # ne
 
 RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"
 BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"
+
+# PINATA_JWT=""
 ```
 
 Finally, initialize your Foundry project with the appropriate network:
@@ -69,11 +70,12 @@ Finally, initialize your Foundry project with the appropriate network:
 make init network=sepolia
 ```
 
-## Task runner
+## Universal task runner
 
 With the project set up, you can run `make` and you will be greeted with a list of available tasks:
 
 ```
+$ make
 Available recipes:
 
   make init                 Prepare the project dependencies            [network="..."]
@@ -104,11 +106,6 @@ Deployment:
   make refund               Transfer the balance left on the deployment account
 
   make help                 Show the main recipes
-
-Custom commands:
-
-  make my-command           Description of my-command
-
 ```
 
 ## Adding new commands
@@ -126,14 +123,14 @@ DEPLOYMENT_SCRIPT := DeployTokenVoting
 
 .PHONY: my-command
 my-command: ## Description of my-command
-	echo "This is $(@)"
+	echo "You called $(@)"
 ```
 
 ## What's included
 
 The `base.mk` file is in charge of *computing* the commands to run, given the environment variables defined.
 
-For every (supported) network, the wollowing `make` and `env` variables are provided:
+For every (supported) network, the wollowing `make` and `env` variables are available:
 
 ```env
 # Used by Foundry
@@ -160,26 +157,13 @@ For networks where the `RPC_URL` variable uses an Alchemy endpoint, make sure th
 
 ## I want to override a value
 
-If the `.env` file for the current network provides a value that you would like to change, you have two options:
+If the network's `.env` provides a value that you need to override, you can do so in your own `.env` file at the project root.
 
-For ad-hoc situations, the simplest way is to edit `lib/foundry-env/networks/.../.env` directly. Changes will be lost when you check out the `foundry-env` subrepo again.
+Env variables are imported in this order:
 
-For a more general solution, you may create an overrides file and include it after `base.mk`:
-
-```make
-include .env
-include lib/foundry-env/base.mk
-
-# Add these lines:
-
-# This will define `make` variables
-include .env.override
-# Export as environment variables for the commands launched
-export RPC_URL:=$(RPC_URL)
-export VERIFIER:=$(VERIFIER)
-
-# ...
-```
+1. Read `lib/foundry-env/networks/<network>/.env`
+2. Read `.env` (overwrite any default values)
+3. Prepare the `make` commands and replacements
 
 ## Documentation & Support
 
