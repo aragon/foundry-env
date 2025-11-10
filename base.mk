@@ -17,22 +17,25 @@ SUPPORTED_NETWORKS := $(shell ls $(FOUNDRY_ENV_DIR)/networks | xargs echo)
 ARTIFACTS_FOLDER := ./artifacts
 LOGS_FOLDER := ./logs
 
-# Remove quotes
-VERIFIER := $(strip $(subst ',, $(subst ",,$(VERIFIER))))
-CHAIN_ID := $(strip $(subst ',, $(subst ",,$(CHAIN_ID))))
-NETWORK_NAME := $(strip $(subst ',, $(subst ",,$(NETWORK_NAME))))
-BLOCKSCOUT_HOST_NAME := $(strip $(subst ',, $(subst ",,$(BLOCKSCOUT_HOST_NAME))))
-DEPLOYMENT_PRIVATE_KEY := $(strip $(subst ',, $(subst ",,$(DEPLOYMENT_PRIVATE_KEY))))
+# Helper functions
+trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
 
-FORK_BLOCK_NUMBER := $(strip $(subst ',, $(subst ",,$(FORK_BLOCK_NUMBER))))
-DEPLOYMENT_SCRIPT := $(strip $(subst ',, $(subst ",,$(DEPLOYMENT_SCRIPT))))
+# Remove quotes
+VERIFIER := $(call trim_quotes,$(VERIFIER))
+CHAIN_ID := $(call trim_quotes,$(CHAIN_ID))
+NETWORK_NAME := $(call trim_quotes,$(NETWORK_NAME))
+BLOCKSCOUT_HOST_NAME := $(call trim_quotes,$(BLOCKSCOUT_HOST_NAME))
+DEPLOYMENT_PRIVATE_KEY := $(call trim_quotes,$(DEPLOYMENT_PRIVATE_KEY))
+
+FORK_BLOCK_NUMBER := $(call trim_quotes,$(FORK_BLOCK_NUMBER))
+DEPLOYMENT_SCRIPT := $(call trim_quotes,$(DEPLOYMENT_SCRIPT))
 
 # Inject API keys (if available)
 ifneq ($(ALCHEMY_API_KEY),)
-    RPC_URL := $(subst __ALCHEMY_API_KEY__,$(ALCHEMY_API_KEY),$(RPC_URL))
+    RPC_URL := $(subst __ALCHEMY_API_KEY__,$(call trim_quotes,$(ALCHEMY_API_KEY)),$(RPC_URL))
 endif
 ifneq ($(INFURA_API_KEY),)
-    RPC_URL := $(subst __INFURA_API_KEY__,$(INFURA_API_KEY),$(RPC_URL))
+    RPC_URL := $(subst __INFURA_API_KEY__,$(call trim_quotes,$(INFURA_API_KEY)),$(RPC_URL))
 endif
 
 # Compute the address (if possible)
@@ -43,12 +46,12 @@ DEPLOYMENT_LOG_FILE := $(LOGS_FOLDER)/deployment-$(NETWORK_NAME)-$(shell date +"
 
 # Validation (if non-empty)
 
-ifeq ($(network),)
+ifeq ($(network),) # CLI argument
 else ifeq ($(filter $(network),$(SUPPORTED_NETWORKS)),)
     $(error Unsupported network: $(network). It can be one of: $(SUPPORTED_NETWORKS))
 endif
 
-ifeq ($(VERIFIER),)
+ifeq ($(VERIFIER),) # .env variable
 else ifeq ($(filter $(VERIFIER),$(SUPPORTED_VERIFIERS)),)
     $(error Unknown verifier: $(VERIFIER). It can be one of: $(SUPPORTED_VERIFIERS))
 endif
@@ -65,7 +68,8 @@ else ifeq ($(VERIFIER), blockscout)
 	VERIFIER_API_KEY := ""
 	VERIFIER_PARAMS = --verifier $(VERIFIER) --verifier-url "$(VERIFIER_URL)"
 else ifeq ($(VERIFIER), sourcify)
-	export ETHERSCAN_API_KEY=""
+	# Inhibit it, so that Foundry doesn't switch to Etherscan, regardless
+	export ETHERSCAN_API_KEY:=""
 else ifeq ($(VERIFIER), zksync)
 	ifeq ($(CHAIN_ID),300)
 		VERIFIER_URL := https://explorer.sepolia.era.zksync.dev/contract_verification
@@ -102,6 +106,14 @@ ifneq ($(FORK_BLOCK_NUMBER),)
 	FORK_TEST_PARAMS := --fork-block-number $(FORK_BLOCK_NUMBER)
 endif
 
+# Exported env variables
+
+export DAO_FACTORY_ADDRESS:=$(call trim_quotes,$(DAO_FACTORY_ADDRESS))
+export PLUGIN_REPO_FACTORY_ADDRESS:=$(call trim_quotes,$(PLUGIN_REPO_FACTORY_ADDRESS))
+export PLUGIN_SETUP_PROCESSOR_ADDRESS:=$(call trim_quotes,$(PLUGIN_SETUP_PROCESSOR_ADDRESS))
+export MANAGEMENT_DAO_ADDRESS:=$(call trim_quotes,$(MANAGEMENT_DAO_ADDRESS))
+export MANAGEMENT_DAO_MULTISIG_ADDRESS:=$(call trim_quotes,$(MANAGEMENT_DAO_MULTISIG_ADDRESS))
+
 # TARGETS
 
 .PHONY: init
@@ -135,7 +147,7 @@ switch: ## Starts using the given network's .env       [network="..."]
 	ln -s ./networks/$(network)/.env  $(FOUNDRY_ENV_DIR)/.env
 
 .PHONY: clean
-clean: ## Clean the build artifacts
+clean: ## Clean the compiler artifacts
 	forge clean
 	rm -Rf ./out ./zkout lcov.info* ./report
 
@@ -315,7 +327,7 @@ clean-nonce: # make clean-nonce nonce=3
 # Internal helpers
 
 # Running the following tests faster, unsetting the API key
-local-test: export ETHERSCAN_API_KEY=""
+local-test: export ETHERSCAN_API_KEY:=""
 
 .PHONY: local-test
 local-test:
@@ -324,7 +336,7 @@ local-test:
 
 
 # Set the SIMULATE variable so that launched scripts can skip writing deployment artifacts
-simulate-script: export SIMULATION=true
+simulate-script: export SIMULATION:=true
 
 # Example:
 # make simulate-script script="MyScript.s.sol:MyScript"
