@@ -110,7 +110,7 @@ Deployment:
 
 ## Adding new commands
 
-If your project needs custom commands, edit your `Makefile` and append a task as follows:
+If your project needs custom commands, edit your `Makefile` and append them as follows:
 
 ```make
 include lib/foundry-env/base.mk
@@ -122,7 +122,7 @@ DEPLOYMENT_SCRIPT := DeployTokenVoting
 
 .PHONY: my-command
 my-command: ## Description of my-command
-	echo "You called $(@)"
+	echo "Using $(RPC_URL)"
 
 .PHONY: my-script
 my-script: ## Running a script by name
@@ -133,7 +133,7 @@ my-script: ## Running a script by name
 
 The `base.mk` file is in charge of *computing* the commands to run, given the environment variables defined.
 
-For every (supported) network, the wollowing `make` and `env` variables are available:
+For every (supported) network, the following variables are available:
 
 ```env
 # Used by Foundry
@@ -158,20 +158,19 @@ MANAGEMENT_DAO_MULTISIG_ADDRESS="0xfcEAd61339e3e73090B587968FcE8b090e0600EF"
 
 For networks where the `RPC_URL` variable uses an Alchemy endpoint, make sure that your `.env` file includes the `ALCHEMY_API_KEY="..."` secret.
 
-## I want to override a value
+## Overriding default values
 
-If the network's `.env` provides a value that you need to override, you can do so in your own `.env` file at the project root.
+If the network's `.env` file provides a value that you need to override, you can do so in your own `.env` file at the project root.
 
 Env variables are imported in this order:
 
 1. Read `lib/foundry-env/networks/<network>/.env`
-2. Read `.env` (overwrite any default values)
-3. Prepare the `make` commands and replacements
+2. Read `.env` (overwrite any defaults from above)
+3. Prepare the `make` commands and arguments
 
 ## Documentation & Support
 
 - [Aragon OSx Docs](https://docs.aragon.org/osx/)
-- [TokenVoting Plugin](https://github.com/aragon/token-voting-plugin)
 - [Foundry Book](https://getfoundry.sh/)
 
 ## Contributing
