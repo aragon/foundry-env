@@ -158,18 +158,18 @@ clean: ## Clean the compiler artifacts
 
 ## Testing:
 
-test-fork: export RPC_URL:=$(RPC_URL)
+fork-test: export RPC_URL:=$(RPC_URL)
 test-coverage: export RPC_URL:=$(RPC_URL)
 
 .PHONY: test
 test: ## Run all tests (local)
-	@make test-local-path \
-	    extra_args='--no-match-path "./test/*fork*/*.sol"'
+	@make run-test-local \
+	    args='--no-match-path "./test/*fork*/*.sol"'
 
-.PHONY: test-fork
-test-fork: ## Run all fork tests (exporting RPC_URL env)
-	@make test-path \
-	    extra_args='--match-path "./test/*fork*/*.sol" --rpc-url $(RPC_URL)'
+.PHONY: fork-test
+fork-test: ## Run all fork tests (exporting RPC_URL env)
+	@make run-test \
+	    args='--match-path "./test/*fork*/*.sol" --rpc-url $(RPC_URL)'
 
 test-coverage: report/index.html ## Generate an HTML coverage report under ./report
 	@which open > /dev/null && open report/index.html || true
@@ -210,12 +210,12 @@ resume: test ## Retry a pending deployment, verify the code and write to ./artif
 	@mkdir -p $(LOGS_FOLDER) $(ARTIFACTS_FOLDER)
 
 	@make run-script name="$(DEPLOYMENT_SCRIPT)" \
-		extra_args="--resume" \
+		args="--resume" \
 	    2>&1 | tee -a $(DEPLOYMENT_LOG_FILE)
 
 	echo "Logs saved in $(DEPLOYMENT_LOG_FILE)"
 
-##
+## Other:
 
 anvil: ## Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER]
 	anvil -f $(RPC_URL) $(FORK_TEST_PARAMS)
@@ -313,7 +313,7 @@ simulate-script:
 
 # Example:
 # make run-script name="MyScriptName"
-# make run-script name="MyScriptName" extra_args="--resume"
+# make run-script name="MyScriptName" args="--resume"
 .PHONY: run-script
 run-script: test
 	forge script $(name) \
@@ -325,20 +325,20 @@ run-script: test
 		$(VERIFIER_PARAMS) \
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS) \
-		$(extra_args)
+		$(args)
 
 # Running local tests faster, unsetting the API key
-test-local-path: export ETHERSCAN_API_KEY:=""
+run-test-local: export ETHERSCAN_API_KEY:=""
 
-.PHONY: test-local-path
-test-local-path:
+.PHONY: run-test-local
+run-test-local:
 	@echo ETHERSCAN_API_KEY=\"\"
-	forge test $(FORGE_BUILD_CUSTOM_PARAMS) $(VERBOSITY) $(extra_args)
+	forge test $(FORGE_BUILD_CUSTOM_PARAMS) $(VERBOSITY) $(args)
 
 # Test targets (fork ready)
-.PHONY: test-path
-test-path:
-	forge test $(FORGE_BUILD_CUSTOM_PARAMS) $(VERBOSITY) $(extra_args)
+.PHONY: run-test
+run-test:
+	forge test $(FORGE_BUILD_CUSTOM_PARAMS) $(VERBOSITY) $(args)
 
 .PHONY: install-foundry
 install-foundry:

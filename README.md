@@ -6,7 +6,8 @@ This repository provides a **reusable foundation** for all Aragon OSx projects b
 
 - A **pre-configured `base.mk` Makefile** that handles network switching, deployment, verification, and testing — no more copy-pasting boilerplate.
 - **Network-specific `.env` files** for every supported chain (mainnet, sepolia, arbitrum, etc.) — with correct RPC URLs, chain IDs, Etherscan keys, and Aragon OSx contract addresses pre-filled.
-- **Consistent, battle-tested configuration** across all your repos.
+- **Reference `foundry.toml` files** for each network
+- **Consistent, functional configuration** across all your repos.
 - A **one stop shop** to run commands.
 
 ### Why use this?
@@ -133,6 +134,55 @@ my-command: ## Description of my-command
 my-script: ## Running a script by name
 	make run-script name=MyCustomScript
 ```
+
+### Reusing common recipes
+
+The main goal of `foundry-env` is to avoid figuring out the same settings many times for each network. To this end, several recipes are available for you to extend.
+
+#### Running or simulating scripts
+
+```make
+.PHONY: preseed
+preseed: ## Simulate calling SeedScript
+	@echo "Simulating SeedScript"
+
+	@make simulate-script name="SeedScript"
+
+.PHONY: seed
+seed: test ## Run the SeedScript and verify any new contracts
+	@echo "Running SeedScript"
+	@mkdir -p $(LOGS_FOLDER)
+
+	@make run-script name="SeedScript" 2>&1 | tee -a $(LOGS_FOLDER)/seed.log
+```
+
+- `make simulate-script` will to a dry run without bradcasting any transaction
+- `make run-script` will populate all the necessary settings for the chosen network and broadcast the transactions triggered by the script from the wallet associated to `DEPLOYMENT_PRIVATE_KEY`
+
+#### Running your own tests
+
+```make
+# Giving a default value to the CLI filters:
+# - make test-fork             =>  v = "**"  (default)
+# - make test-fork v="v1_2_0"  =>  v = "v1_2_0"
+
+test-fork: v ?= **
+
+.PHONY: test-unit
+test-unit: ## Run unit tests
+	@make run-test-local \
+	    arg='--no-match-path "./test/**/fork/*.sol"'
+
+.PHONY: test-fork
+test-fork: ## Run fork tests                       [optional: v="v1_2_0"]
+	@make run-test \
+	    arg='--match-path "./test/$(v)/fork/*.sol" --rpc-url $(RPC_URL)'
+```
+
+Both test helpers provide useful defaults while allowing you to pass extra parameters via `args='...'`.
+
+- `make run-test-local` will unset `ETHERSCAN_API_KEY`, making local tests run faster
+- `make run-test` will run tests in default mode, allowing to run fork tests and similar
 
 ## What's included
 
