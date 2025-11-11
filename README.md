@@ -229,6 +229,56 @@ You can also override `make` variables by passing them as CLI arguments:
 make deploy RPC_URL="https://sepolia.drpc.org"
 ```
 
+## Self documenting tasks
+
+Using `make` or `make help` is the preferred way to get a useful summary of the available commands.
+
+To expand the summary with your custom commands, edit your `Makefile` and add comments starting by `##` as shown below:
+
+```make
+# This comment is ignored
+
+my-internal-cmd:
+	echo "Not part of make help"
+
+# `make help` is triggered when using `##` comments
+
+# The line below will appear as a section title
+## My commands:
+
+my-cmd: ## This comment will appear when running `make help`
+	echo "Hi cmd"
+
+# The empty comment below (##) will generate a separator
+##
+
+my-script: dependency ## This will also appear when running `make help`
+	echo "Hi script"
+```
+
+## Troubleshooting helpers
+
+While `make help` will show you the tasks with a `##` comment, there are additional troubleshooting helpers available:
+
+```sh
+# Check that the wallet has enough balance
+$ make balance
+Balance of 0x1147557Ed36d902E17b9180BFc144526518e148e (sepolia):
+5.51998258705224007
+
+# Check for gas price spikes
+$ make gas-price
+Gas price (sepolia):
+1000015
+
+# If some transactions get stuck
+# Replace them by zero transfer's with a higher gas price
+$ make clean-nonce nonce=27
+
+# Clear multiple at once
+$ make clean-nonces nonces="2 3 4 5"
+```
+
 ## Documentation & Support
 
 - [Aragon OSx Docs](https://docs.aragon.org/osx/)

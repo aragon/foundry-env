@@ -13,6 +13,7 @@ FOUNDRY_ENV_DIR := $(patsubst %/,%,${FOUNDRY_ENV_DIR})
 # Load the .env file from the project root
 -include .env
 
+
 # CONSTANTS
 
 SUPPORTED_VERIFIERS := etherscan blockscout sourcify zksync routescan-mainnet routescan-testnet
@@ -25,7 +26,7 @@ VERBOSITY ?= -vvv
 # Helper functions
 trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
 
-# Clean constants
+# Clean constants (env)
 VERIFIER := $(call trim_quotes,$(VERIFIER))
 CHAIN_ID := $(call trim_quotes,$(CHAIN_ID))
 NETWORK_NAME := $(call trim_quotes,$(NETWORK_NAME))
@@ -49,7 +50,8 @@ ifneq ($(DEPLOYMENT_PRIVATE_KEY),)
 endif
 DEPLOYMENT_LOG_FILE := $(LOGS_FOLDER)/deployment-$(NETWORK_NAME)-$(shell date +"%y-%m-%d-%H-%M").log
 
-# Validation (if non-empty)
+
+# VALIDATION (when non-empty)
 
 ifeq ($(network),) # CLI argument
 else ifeq ($(filter $(network),$(SUPPORTED_NETWORKS)),)
@@ -61,7 +63,8 @@ else ifeq ($(filter $(VERIFIER),$(SUPPORTED_VERIFIERS)),)
     $(error Unknown verifier: $(VERIFIER). It can be one of: $(SUPPORTED_VERIFIERS))
 endif
 
-# Conditional assignments
+
+# CONDITIONAL ASSIGNMENTS
 
 # Verification backend
 ifeq ($(VERIFIER), etherscan)
@@ -119,7 +122,8 @@ export PLUGIN_SETUP_PROCESSOR_ADDRESS:=$(call trim_quotes,$(PLUGIN_SETUP_PROCESS
 export MANAGEMENT_DAO_ADDRESS:=$(call trim_quotes,$(MANAGEMENT_DAO_ADDRESS))
 export MANAGEMENT_DAO_MULTISIG_ADDRESS:=$(call trim_quotes,$(MANAGEMENT_DAO_MULTISIG_ADDRESS))
 
-# TARGETS
+
+# PUBLIC TARGETS
 
 .PHONY: init
 init: ## Prepare the project dependencies            [network="..."]
@@ -267,7 +271,8 @@ help: ## Show the main recipes
 		fi ; \
 	done
 
-# Troubleshooting helpers
+
+# TROUBLESHOOTING HELPERS
 
 .PHONY: gas-price
 gas-price:
@@ -296,7 +301,8 @@ clean-nonce: # make clean-nonce nonce=3
 		--nonce $(nonce) \
 		$(DEPLOYMENT_ADDRESS)
 
-# Internal helpers
+
+# INTERNAL HELPERS
 
 # Set the SIMULATE variable so that launched scripts can skip writing deployment artifacts
 simulate-script: export SIMULATION:=true
