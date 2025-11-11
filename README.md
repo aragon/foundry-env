@@ -1,6 +1,6 @@
-# OSx Project Manager for Foundry
+# Foundry ENV for OSx
 
-**Standardized, network-ready Foundry setups — zero configuration needed.**
+**Standardized, network-ready Foundry setups for Aragon OSx projects.**
 
 This repository provides a **reusable foundation** for all Aragon OSx projects built with Foundry. It delivers:
 
@@ -18,7 +18,7 @@ Most Aragon plugins need to:
 - Reference the same core Aragon OSx addresses
 - Use consistent secrets and environment variables
 
-**This repo eliminates the repetitive, error-prone setup.** Just add it as a submodule and your project inherits a standard, multi-network toolkit.
+**This repo eliminates the repetitive discovery of network specific settings and workarounds.** Add it as a submodule and your project inherits a standard, multi-network toolkit with a single command shell.
 
 ### Get started
 
@@ -37,7 +37,7 @@ include lib/foundry-env/base.mk
 DEPLOYMENT_SCRIPT ?= DeployTokenVoting
 ```
 
-Create an `.env` file with the following secrets:
+Next, create the `.env` file with your secrets:
 
 ```env
 # Required
@@ -48,7 +48,7 @@ ETHERSCAN_API_KEY="..."
 # Optional
 # ---------------------
 
-# When the network's RPC_URL uses an Alchemy endpoint
+# If the network's RPC_URL uses an Alchemy endpoint
 ALCHEMY_API_KEY=""
 
 # FORK_BLOCK_NUMBER=12345
@@ -85,7 +85,7 @@ $ make
 Available recipes:
 
   make init                 Prepare the project dependencies            [network="..."]
-  make switch               Starts using the given network's .env       [network="..."]
+  make switch               Starts using the given network              [network="..."]
   make clean                Clean the compiler artifacts
 
 Testing:
@@ -119,6 +119,7 @@ Deployment:
 If your project needs custom commands, edit your `Makefile` and append them as follows:
 
 ```make
+# .env is imported by base.mk
 include lib/foundry-env/base.mk
 
 # The (contract) name of your deployment script
