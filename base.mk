@@ -68,7 +68,7 @@ endif
 
 # Verification backend
 ifeq ($(VERIFIER), etherscan)
-	VERIFIER_URL := https://api.etherscan.io/api
+	VERIFIER_URL := https://api.etherscan.io/v2/api
 	VERIFIER_API_KEY := $(ETHERSCAN_API_KEY)
 	VERIFIER_PARAMS := --verifier $(VERIFIER) --etherscan-api-key $(ETHERSCAN_API_KEY)
 else ifeq ($(VERIFIER), blockscout)
@@ -218,6 +218,39 @@ resume: test ## Retry a pending deployment, verify the code and write to ./artif
 	    2>&1 | tee -a $(DEPLOYMENT_LOG_FILE)
 
 	echo "Logs saved in $(DEPLOYMENT_LOG_FILE)"
+
+## Verification:
+
+.PHONY: verify
+verify: ## Verify the last script deployment on the current network's main explorer
+	@echo "Verifying the last deployment of $(DEPLOYMENT_SCRIPT) on $(NETWORK_NAME) ($(CHAIN_ID))"
+
+	@case "$(VERIFIER)" in \
+	etherscan | zksync | custom) \
+    	make verify-etherscan ; \
+        ;; \
+    blockscout) \
+      	make verify-blockscout ; \
+        ;; \
+    sourcify) \
+   	    make verify-sourcify ; \
+        ;; \
+    esac
+
+.PHONY: verify-etherscan
+verify-etherscan: broadcast/$(DEPLOYMENT_SCRIPT).s.sol/$(CHAIN_ID)/run-latest.json
+	forge build $(FORGE_BUILD_CUSTOM_PARAMS)
+	bash $(FOUNDRY_ENV_DIR)/scripts/verify-contracts.sh $(CHAIN_ID) $(VERIFIER) $(DEPLOYMENT_SCRIPT).s.sol $(VERIFIER_URL) $(VERIFIER_API_KEY)
+
+.PHONY: verify-blockscout
+verify-blockscout: broadcast/$(DEPLOYMENT_SCRIPT).s.sol/$(CHAIN_ID)/run-latest.json
+	forge build $(FORGE_BUILD_CUSTOM_PARAMS)
+	bash $(FOUNDRY_ENV_DIR)/scripts/verify-contracts.sh $(CHAIN_ID) $(VERIFIER) $(DEPLOYMENT_SCRIPT).s.sol https://$(BLOCKSCOUT_HOST_NAME)/api $(VERIFIER_API_KEY)
+
+.PHONY: verify-sourcify
+verify-sourcify: broadcast/$(DEPLOYMENT_SCRIPT).s.sol/$(CHAIN_ID)/run-latest.json
+	forge build $(FORGE_BUILD_CUSTOM_PARAMS)
+	bash $(FOUNDRY_ENV_DIR)/scripts/verify-contracts.sh $(CHAIN_ID) $(VERIFIER) $(DEPLOYMENT_SCRIPT).s.sol "" ""
 
 ## Other:
 
