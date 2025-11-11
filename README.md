@@ -225,7 +225,7 @@ make deploy RPC_URL="https://sepolia.drpc.org"
 
 Using `make` or `make help` is the preferred way to get a useful summary of the available commands.
 
-To expand the summary with your custom commands, edit your `Makefile` and add comments starting by `##` as shown below:
+To expand `make help` with your custom commands, edit your `Makefile` and add comments starting by `##` as shown below:
 
 ```make
 # This comment is ignored
@@ -238,10 +238,10 @@ my-internal-cmd:
 # The line below will appear as a section title
 ## My commands:
 
-my-cmd: ## This comment will appear when running `make help`
+my-cmd: ## This will appear when running `make help`
 	echo "Hi cmd"
 
-# The empty comment below (##) will generate a separator
+# The empty comment below (##) will turn into a separator
 ##
 
 my-script: dependency ## This will also appear when running `make help`
@@ -250,24 +250,33 @@ my-script: dependency ## This will also appear when running `make help`
 
 ## Troubleshooting helpers
 
-While `make help` will show you the tasks with a `##` comment, there are additional troubleshooting helpers available:
+While `make help` will show you the tasks with a `##` comment, there are additional troubleshooting helpers available.
+
+Check that the wallet has enough balance:
 
 ```sh
-# Check that the wallet has enough balance
 $ make balance
 Balance of 0x1147557Ed36d902E17b9180BFc144526518e148e (sepolia):
 5.51998258705224007
+```
 
-# Check for gas price spikes
+Check for gas price spikes:
+
+```sh
 $ make gas-price
 Gas price (sepolia):
 1000015
+```
 
-# If some transactions get stuck
-# Replace them by zero transfer's with a higher gas price
+If some transactions get stuck, replace them by zero transfer's with a higher gas price:
+
+```sh
 $ make clean-nonce nonce=27
+```
 
-# Clear multiple at once
+Wipe multiple stuck transactions at once:
+
+```sh
 $ make clean-nonces nonces="2 3 4 5"
 ```
 
