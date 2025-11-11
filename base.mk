@@ -68,7 +68,7 @@ endif
 
 # Verification backend
 ifeq ($(VERIFIER), etherscan)
-	VERIFIER_URL := https://api.etherscan.io/api
+	VERIFIER_URL := https://api.etherscan.io/v2/api
 	VERIFIER_API_KEY := $(ETHERSCAN_API_KEY)
 	VERIFIER_PARAMS := --verifier $(VERIFIER) --etherscan-api-key $(ETHERSCAN_API_KEY)
 else ifeq ($(VERIFIER), blockscout)
@@ -209,7 +209,7 @@ deploy: test ## Deploy the plugin, verify the code and write to ./artifacts
 	echo "Logs saved in $(DEPLOYMENT_LOG_FILE)"
 
 .PHONY: resume
-resume: test ## Retry a pending deployment, verify the code and write to ./artifacts
+resume: test ## Continue a pending deployment, verify the code and write to ./artifacts
 	@echo "Retrying the deployment"
 	@mkdir -p $(LOGS_FOLDER) $(ARTIFACTS_FOLDER)
 
@@ -219,7 +219,7 @@ resume: test ## Retry a pending deployment, verify the code and write to ./artif
 
 	echo "Logs saved in $(DEPLOYMENT_LOG_FILE)"
 
-## Other:
+## General:
 
 anvil: ## Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER]
 	anvil -f $(RPC_URL) $(FORK_TEST_PARAMS)
@@ -321,7 +321,7 @@ simulate-script:
 # make run-script name="MyScriptName"
 # make run-script name="MyScriptName" args="--resume"
 .PHONY: run-script
-run-script: test
+run-script:
 	forge script $(name) \
 		--rpc-url $(RPC_URL) \
 		--retries 10 \
