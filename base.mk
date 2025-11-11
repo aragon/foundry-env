@@ -141,7 +141,7 @@ init: ## Prepare the project dependencies            [network="..."]
 	forge build $(FORGE_BUILD_CUSTOM_PARAMS) --sizes
 
 .PHONY: switch
-switch: ## Starts using the given network's .env       [network="..."]
+switch: ## Starts using the given network              [network="..."]
 	@if [ "$(network)" == "" ]; then \
 		echo "Usage:" ; \
 		echo "  $$ make switch network=<name>" ; \

@@ -14,9 +14,9 @@ This repository provides a **reusable foundation** for all Aragon OSx projects b
 
 Most Aragon plugins need to:
 - Be deployed to multiple networks
-- Verify contracts on Etherscan
 - Reference the same core Aragon OSx addresses
 - Use consistent secrets and environment variables
+<!--- Verify contracts on Etherscan-->
 
 **This repo eliminates the repetitive discovery of network specific settings and workarounds.** Add it as a submodule and your project inherits a standard, multi-network toolkit with a single command shell.
 
@@ -37,7 +37,7 @@ include lib/foundry-env/base.mk
 DEPLOYMENT_SCRIPT ?= DeployTokenVoting
 ```
 
-Next, create the `.env` file with your secrets:
+Next, create the `.env` file with your secrets and settings:
 
 ```env
 # Required
@@ -90,23 +90,17 @@ Available recipes:
 
 Testing:
 
-  make test                 Run unit tests                       [optional: v="v1_2_0"]
-  make test-integration     Run integration tests                [optional: v="v1_2_0"]
-  make test-unint           Run unit + integration tests         [optional: v="v1_2_0"]
-  make test-invariant       Run invariant tests                  [optional: v="v1_2_0"]
-  make test-upgrades        Run regression/upgrade tests         [optional: v="v1_2_0"]
-
-  make test-fork            Run fork tests (using RPC_URL)
-  make test-fork-mint       Run fork tests (minting tokens)
-  make test-fork-existing   Run fork tests (existing factory)
-  make test-fork-exmint     Run fork tests (existing factory + minting tokens)
-  make test-coverage        Generate an HTML test coverage report under ./report
+  make test                 Run all tests (local)
+  make fork-test            Run all fork tests (exporting RPC_URL env)
+  make test-coverage        Generate an HTML coverage report under ./report
 
 Deployment:
 
   make predeploy            Simulate a plugin deployment
   make deploy               Deploy the plugin, verify the code and write to ./artifacts
   make resume               Retry a pending deployment, verify the code and write to ./artifacts
+
+Other:
 
   make anvil                Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER]
   make refund               Transfer the balance left on the deployment account
@@ -157,16 +151,13 @@ seed: test ## Run the SeedScript and verify any new contracts
 	@make run-script name="SeedScript" 2>&1 | tee -a $(LOGS_FOLDER)/seed.log
 ```
 
-- `make simulate-script` will to a dry run without bradcasting any transaction
-- `make run-script` will populate all the necessary settings for the chosen network and broadcast the transactions triggered by the script from the wallet associated to `DEPLOYMENT_PRIVATE_KEY`
+- Extending `make simulate-script` will do a dry run without bradcasting any transaction
+- Extending `make run-script` will populate all the necessary settings for the chosen network and broadcast the transactions triggered by the script from the wallet associated to `DEPLOYMENT_PRIVATE_KEY`
 
-#### Running your own tests
+#### Running your tests
 
 ```make
-# Giving a default value to the CLI filters:
-# - make test-fork             =>  v = "**"  (default)
-# - make test-fork v="v1_2_0"  =>  v = "v1_2_0"
-
+# Default value for `v` if no `v="..."` is specified
 test-fork: v ?= **
 
 .PHONY: test-unit
@@ -182,14 +173,14 @@ test-fork: ## Run fork tests                       [optional: v="v1_2_0"]
 
 Both test helpers provide useful defaults while allowing you to pass extra parameters via `args='...'`.
 
-- `make run-test-local` will unset `ETHERSCAN_API_KEY`, making local tests run faster
-- `make run-test` will run tests in default mode, allowing to run fork tests and similar
+- Extending `make run-test-local` will unset `ETHERSCAN_API_KEY`, making local tests run faster
+- Extending `make run-test` will run tests in default mode, allowing to run fork tests and similar
 
-## What's included
+## Included settings
 
-The `base.mk` file is in charge of *computing* the commands to run, given the environment variables defined.
+The `base.mk` file is in charge of *computing* the commands to run, given the network environment variables defined by `lib/foundry-env/.env`.
 
-For every (supported) network, the following variables are available:
+For every (supported) network, the following variable names are provided:
 
 ```env
 # Used by Foundry
