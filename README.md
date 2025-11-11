@@ -248,6 +248,18 @@ my-script: dependency ## This will also appear when running `make help`
 	echo "Hi script"
 ```
 
+## Utility scripts
+
+### IPFS pinning
+
+Define `PINATA_JWT` in your `.env` file and use the following recipe:
+
+```sh
+$ make ipfs-pin f="my-file.json"
+Uploading my-file.json...
+ipfs://QmeExW4pzpLfTFpUmYGK5jtHbaQntJst6EfoHnYA7eyut2
+```
+
 ## Troubleshooting helpers
 
 While `make help` will show you the tasks with a `##` comment, there are additional troubleshooting helpers available.

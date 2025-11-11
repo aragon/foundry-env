@@ -302,6 +302,24 @@ clean-nonce: # make clean-nonce nonce=3
 		$(DEPLOYMENT_ADDRESS)
 
 
+# UTILITY SCRIPTS
+
+ipfs-pin: export PINATA_JWT:=$(PINATA_JWT)
+
+.PHONY: ipfs-pin
+ipfs-pin:
+	@if ! command -v deno >/dev/null 2>&1; then \
+	    echo "Note: deno can be installed by running 'curl -fsSL https://deno.land/install.sh | sh'" ; \
+	    exit 1 ; \
+	fi
+	@if [ -z "$(f)" ]; then \
+		echo -e "Usage:\n  make $(@) f=path/to/file.json\n" ; \
+		exit 1 ; \
+	fi
+	@echo "Uploading $(f)..."
+	@echo ipfs://$$(deno run --allow-read --allow-env --allow-net $(FOUNDRY_ENV_DIR)/scripts/ipfs-pin.ts $(f))
+
+
 # INTERNAL HELPERS
 
 # Set the SIMULATE variable so that launched scripts can skip writing deployment artifacts
