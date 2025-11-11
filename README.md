@@ -252,7 +252,7 @@ my-script: dependency ## This will also appear when running `make help`
 
 ### IPFS pinning
 
-Define `PINATA_JWT` in your `.env` file and use the following recipe:
+Define `PINATA_JWT` in your `.env` file and call `make ipfs-pin` as follows:
 
 ```sh
 $ make ipfs-pin f="my-file.json"
