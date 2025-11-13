@@ -16,7 +16,7 @@ FOUNDRY_ENV_DIR := $(patsubst %/,%,${FOUNDRY_ENV_DIR})
 
 # CONSTANTS
 
-SUPPORTED_VERIFIERS := etherscan blockscout sourcify zksync routescan-mainnet routescan-testnet
+SUPPORTED_VERIFIERS := etherscan blockscout sourcify zksync routescan routescan-testnet
 SUPPORTED_NETWORKS := $(shell ls $(FOUNDRY_ENV_DIR)/networks | xargs echo)
 TEST_COVERAGE_SOURCES := $(wildcard test/*.sol test/**/*.sol src/*.sol src/**/*.sol)
 ARTIFACTS_FOLDER := ./artifacts
@@ -27,14 +27,25 @@ VERBOSITY ?= -vvv
 trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
 
 # Clean constants (env)
-VERIFIER := $(call trim_quotes,$(VERIFIER))
+DEPLOYMENT_PRIVATE_KEY := $(call trim_quotes,$(DEPLOYMENT_PRIVATE_KEY))
+RPC_URL := $(call trim_quotes,$(RPC_URL))
 CHAIN_ID := $(call trim_quotes,$(CHAIN_ID))
 NETWORK_NAME := $(call trim_quotes,$(NETWORK_NAME))
+VERIFIER := $(call trim_quotes,$(VERIFIER))
 BLOCKSCOUT_HOST_NAME := $(call trim_quotes,$(BLOCKSCOUT_HOST_NAME))
-DEPLOYMENT_PRIVATE_KEY := $(call trim_quotes,$(DEPLOYMENT_PRIVATE_KEY))
-
-FORK_BLOCK_NUMBER := $(call trim_quotes,$(FORK_BLOCK_NUMBER))
 DEPLOYMENT_SCRIPT := $(call trim_quotes,$(DEPLOYMENT_SCRIPT))
+FORK_BLOCK_NUMBER := $(call trim_quotes,$(FORK_BLOCK_NUMBER))
+
+DAO_FACTORY_ADDRESS :=$(call trim_quotes,$(DAO_FACTORY_ADDRESS))
+PLUGIN_REPO_FACTORY_ADDRESS :=$(call trim_quotes,$(PLUGIN_REPO_FACTORY_ADDRESS))
+PLUGIN_SETUP_PROCESSOR_ADDRESS :=$(call trim_quotes,$(PLUGIN_SETUP_PROCESSOR_ADDRESS))
+MANAGEMENT_DAO_ADDRESS :=$(call trim_quotes,$(MANAGEMENT_DAO_ADDRESS))
+MANAGEMENT_DAO_MULTISIG_ADDRESS :=$(call trim_quotes,$(MANAGEMENT_DAO_MULTISIG_ADDRESS))
+TOKEN_VOTING_PLUGIN_REPO_ADDRESS :=$(call trim_quotes,$(TOKEN_VOTING_PLUGIN_REPO_ADDRESS))
+MULTISIG_PLUGIN_REPO_ADDRESS :=$(call trim_quotes,$(MULTISIG_PLUGIN_REPO_ADDRESS))
+LOCK_TO_VOTE_PLUGIN_REPO_ADDRESS :=$(call trim_quotes,$(LOCK_TO_VOTE_PLUGIN_REPO_ADDRESS))
+ADMIN_PLUGIN_REPO_ADDRESS :=$(call trim_quotes,$(ADMIN_PLUGIN_REPO_ADDRESS))
+SPP_PLUGIN_REPO_ADDRESS :=$(call trim_quotes,$(SPP_PLUGIN_REPO_ADDRESS))
 
 # Inject API keys (if available)
 ifneq ($(ALCHEMY_API_KEY),)
@@ -86,8 +97,8 @@ else ifeq ($(VERIFIER), zksync)
 	endif
 	VERIFIER_API_KEY := ""
 	VERIFIER_PARAMS = --verifier $(VERIFIER) --verifier-url "$(VERIFIER_URL)"
-else ifneq ($(filter $(VERIFIER), routescan-mainnet routescan-testnet),)
-	ifeq ($(VERIFIER), routescan-mainnet)
+else ifneq ($(filter $(VERIFIER), routescan routescan-testnet),)
+	ifeq ($(VERIFIER), routescan)
 		VERIFIER_URL := https://api.routescan.io/v2/network/mainnet/evm/$(CHAIN_ID)/etherscan
 	else
 		VERIFIER_URL := https://api.routescan.io/v2/network/testnet/evm/$(CHAIN_ID)/etherscan
@@ -137,7 +148,7 @@ init: ## Prepare the project dependencies            [network="..."]
 		make switch network=$(network) ; \
 	fi
 	@which forge > /dev/null || make install-foundry
-	@make init-keystore
+	@#make init-keystore
 	forge build $(FORGE_BUILD_CUSTOM_PARAMS) --sizes
 
 .PHONY: switch
@@ -168,12 +179,12 @@ test-coverage: export RPC_URL:=$(RPC_URL)
 .PHONY: test
 test: ## Run all tests (local)
 	@make run-test-local \
-	    args='--no-match-path "./test/*fork*/*.sol"'
+	    args='--no-match-path "./test/*fork*/**/*.sol"'
 
 .PHONY: fork-test
 fork-test: ## Run all fork tests (exporting RPC_URL env)
 	@make run-test \
-	    args='--match-path "./test/*fork*/*.sol" --rpc-url $(RPC_URL)'
+	    args='--match-path "./test/*fork*/**/*.sol" --rpc-url "$(RPC_URL)"'
 
 test-coverage: report/index.html ## Generate an HTML coverage report under ./report
 	@which open > /dev/null && open report/index.html || true
@@ -199,7 +210,7 @@ predeploy: ## Simulate a plugin deployment
 	@make simulate-script name="$(DEPLOYMENT_SCRIPT)"
 
 .PHONY: deploy
-deploy: test ## Deploy the plugin, verify the code and write to ./artifacts
+deploy: test ## Deploy the plugin and verify the code
 	@echo "Starting the deployment"
 	@mkdir -p $(LOGS_FOLDER) $(ARTIFACTS_FOLDER)
 
@@ -209,7 +220,7 @@ deploy: test ## Deploy the plugin, verify the code and write to ./artifacts
 	echo "Logs saved in $(DEPLOYMENT_LOG_FILE)"
 
 .PHONY: resume
-resume: test ## Retry a pending deployment, verify the code and write to ./artifacts
+resume: test ## Retry a pending deployment and verify the code
 	@echo "Retrying the deployment"
 	@mkdir -p $(LOGS_FOLDER) $(ARTIFACTS_FOLDER)
 
@@ -255,7 +266,7 @@ verify-sourcify: broadcast/$(DEPLOYMENT_SCRIPT).s.sol/$(CHAIN_ID)/run-latest.jso
 ## Other:
 
 anvil: ## Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER]
-	anvil -f $(RPC_URL) $(FORK_TEST_PARAMS)
+	anvil -f "$(RPC_URL)" $(FORK_TEST_PARAMS)
 
 refund: export DEPLOYMENT_PRIVATE_KEY:=$(DEPLOYMENT_PRIVATE_KEY)
 
@@ -265,8 +276,8 @@ refund: ## Transfer the balance left on the deployment account
 	@if [ -z $(REFUND_ADDRESS) -o $(REFUND_ADDRESS) = "0x0000000000000000000000000000000000000000" ]; then \
 		echo "- The refund address is empty" ; exit 1; \
 	fi
-	@BALANCE=$(shell cast balance $(DEPLOYMENT_ADDRESS) --rpc-url $(RPC_URL)) && \
-		GAS_PRICE=$(shell cast gas-price --rpc-url $(RPC_URL)) && \
+	@BALANCE=$(shell cast balance $(DEPLOYMENT_ADDRESS) --rpc-url "$(RPC_URL)") && \
+		GAS_PRICE=$(shell cast gas-price --rpc-url "$(RPC_URL)") && \
 		SPENDABLE=$$(echo "$$BALANCE - $$GAS_PRICE * 50000" | bc) && \
 		ENOUGH_BALANCE=$$(echo "$$SPENDABLE > 0" | bc) && \
 		\
@@ -280,11 +291,11 @@ refund: ## Transfer the balance left on the deployment account
 		if [ "$$CONFIRM" != "y" ]; then echo "Aborting" ; exit 1; fi ; \
 		\
 		cast send --private-key $$DEPLOYMENT_PRIVATE_KEY \
-			--rpc-url $(RPC_URL) \
+			--rpc-url "$(RPC_URL)" \
 			--value $$SPENDABLE \
 			$(REFUND_ADDRESS)
 
-##
+#
 
 ACCENT := \e[33m
 LIGHTER := \e[37m
@@ -310,12 +321,12 @@ help: ## Show the main recipes
 .PHONY: gas-price
 gas-price:
 	@echo "Gas price ($(NETWORK_NAME)):"
-	@cast gas-price --rpc-url $(RPC_URL)
+	@cast gas-price --rpc-url "$(RPC_URL)"
 
 .PHONY: balance
 balance:
 	@echo "Balance of $(DEPLOYMENT_ADDRESS) ($(NETWORK_NAME)):"
-	@BALANCE=$$(cast balance $(DEPLOYMENT_ADDRESS) --rpc-url $(RPC_URL)) && \
+	@BALANCE=$$(cast balance $(DEPLOYMENT_ADDRESS) --rpc-url "$(RPC_URL)") && \
 		cast --to-unit $$BALANCE ether
 
 .PHONY: clean-nonces
@@ -329,7 +340,7 @@ clean-nonce: export DEPLOYMENT_PRIVATE_KEY:=$(DEPLOYMENT_PRIVATE_KEY)
 .PHONY: clean-nonce
 clean-nonce: # make clean-nonce nonce=3
 	@cast send --private-key $$DEPLOYMENT_PRIVATE_KEY \
-		--rpc-url $(RPC_URL) \
+		--rpc-url "$(RPC_URL)" \
 		--value 0 \
 		--nonce $(nonce) \
 		$(DEPLOYMENT_ADDRESS)
@@ -355,26 +366,28 @@ ipfs-pin:
 
 # INTERNAL HELPERS
 
+# SCRIPT HELPERS
+
 # Set the SIMULATE variable so that launched scripts can skip writing deployment artifacts
 simulate-script: export SIMULATION:=true
 
 # Example:
-# make simulate-script name="MyScriptName"
+# make simulate-script name="MyScriptContractName"
 .PHONY: simulate-script
 simulate-script:
 	@echo "SIMULATION=true"
 	forge script $(name) \
-		--rpc-url $(RPC_URL) \
+		--rpc-url "$(RPC_URL)" \
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS)
 
 # Example:
-# make run-script name="MyScriptName"
-# make run-script name="MyScriptName" args="--resume"
+# make run-script name="MyScriptContractName"
+# make run-script name="MyScriptContractName" args="--resume"
 .PHONY: run-script
 run-script: test
 	forge script $(name) \
-		--rpc-url $(RPC_URL) \
+		--rpc-url "$(RPC_URL)" \
 		--retries 10 \
 		--delay 10 \
 		--broadcast \
@@ -383,6 +396,8 @@ run-script: test
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS) \
 		$(args)
+
+# TESTING HELPERS
 
 # Running local tests faster, unsetting the API key
 run-test-local: export ETHERSCAN_API_KEY:=""
