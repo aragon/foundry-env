@@ -137,7 +137,6 @@ init: ## Prepare the project dependencies            [network="..."]
 		make switch network=$(network) ; \
 	fi
 	@which forge > /dev/null || make install-foundry
-	@make init-keystore
 	forge build $(FORGE_BUILD_CUSTOM_PARAMS) --sizes
 
 .PHONY: switch
