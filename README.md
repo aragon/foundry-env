@@ -1,86 +1,290 @@
-# Aragon Foundry `.env` templates
+# Foundry ENV for OSx
 
-**A repository for standardized `.env` templates** used in Foundry-based Solidity projects.
-Save time. Avoid misconfigurations.
+**Standardized, network-ready Foundry setups for Aragon OSx projects.**
 
-## Overview
+This repository provides a **reusable foundation** for all Aragon OSx projects built with Foundry. It delivers:
 
-This repository provides pre-configured `.env` and `foundry.toml` files for Foundry projects interacting with the Aragon OSx protocol. It centralizes:
+- A **pre-configured `base.mk` Makefile** that handles network switching, deployment, verification, and testing — no more copy-pasting boilerplate.
+- **Network-specific `.env` files** for every supported chain (mainnet, sepolia, arbitrum, etc.) — with correct RPC URLs, chain IDs, Etherscan keys, and Aragon OSx contract addresses pre-filled.
+- **Reference `foundry.toml` files** for each network
+- **Consistent, functional configuration** across all your repos.
+- A **one stop shop** to run commands.
 
-- Network configuration (RPC URLs, chain IDs, explorers)
-- Source code verification parameters for Etherscan and other block explorers
-- Commonly used Aragon OSx contract addresses (DAOFactory, PluginRepoFactory, PluginSetupProcessor)
-- Example environment variables for the **TokenVoting plugin**
+### Why use this?
 
-Use these templates to bootstrap your Aragon OSx repository quickly — no more redundant searches or copying from old repos!
+Most Aragon plugins need to:
+- Be deployed to multiple networks
+- Reference the same core Aragon OSx addresses
+- Use consistent secrets and environment variables
+<!--- Verify contracts on Etherscan-->
 
-## Included Files
+**This repo eliminates the repetitive discovery of network specific settings and workarounds.** Add it as a submodule and your project inherits a standard, multi-network toolkit with a single command shell.
 
-Every supported network has a template env file located on the [./networks/](./networks) folder.
+### Get started
 
-💡 Use `cp networks/mainnet/.env path/to/project/.env` to start a new project. Then define the private values as needed.
+```sh
+# Add the submodule
+git submodule add git@github.com:aragon/foundry-env.git lib/foundry-env
+```
 
-## Key Variables
+Create a minimal `Makefile` on your project root:
 
-### Configuration
+```make
+# .env is imported by base.mk
+include lib/foundry-env/base.mk
+
+# The contract name of your deployment script (default)
+DEPLOYMENT_SCRIPT ?= DeployTokenVoting
+```
+
+Next, create the `.env` file with your secrets and settings:
 
 ```env
-# NETWORK AND ACCOUNT(s)
-# ---------------------------------------------------
-DEPLOYMENT_PRIVATE_KEY="" # REQUIRED
-REFUND_ADDRESS=""
+# Required
+# ---------------------
+DEPLOYMENT_PRIVATE_KEY="0x..."
+ETHERSCAN_API_KEY="..."
 
+# Optional
+# ---------------------
+
+# If the network's RPC_URL uses an Alchemy endpoint
+ALCHEMY_API_KEY=""
+
+# FORK_BLOCK_NUMBER=12345
+
+# If using a burner wallet
+REFUND_ADDRESS="0x..."
+```
+
+Include any additional settings that your scripts need:
+
+```env
+PLUGIN_REPO_ADDRESS="0x1AeD2BEb470aeFD65B43f905Bd5371b1E4749d18" # network dependent
+PLUGIN_REPO_MAINTAINER_ADDRESS="0x051D2BEb470aeFD65B43f905Bd5371b1E4749d14" # network dependent
+
+RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"
+BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"
+
+# PLUGIN_ENS_SUBDOMAIN=""
+# PINATA_JWT=""
+```
+
+Finally, initialize your Foundry project with the appropriate network:
+
+```sh
+make init network=sepolia
+```
+
+## Universal task runner
+
+With the project set up, you can run `make` and you will be greeted with a list of available tasks:
+
+```
+$ make
+Available recipes:
+
+  make init                 Prepare the project dependencies            [network="..."]
+  make switch               Starts using the given network              [network="..."]
+  make clean                Clean the compiler artifacts
+
+Testing:
+
+  make test                 Run all tests (local)
+  make fork-test            Run all fork tests (exporting RPC_URL env)
+  make test-coverage        Generate an HTML coverage report under ./report
+
+Deployment:
+
+  make predeploy            Simulate a plugin deployment
+  make deploy               Deploy the plugin, verify the code and write to ./artifacts
+  make resume               Retry a pending deployment, verify the code and write to ./artifacts
+
+Other:
+
+  make anvil                Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER]
+  make refund               Transfer the balance left on the deployment account
+
+  make help                 Show the main recipes
+```
+
+## Adding new commands
+
+If your project needs custom commands, edit your `Makefile` and append them as follows:
+
+```make
+# .env is imported by base.mk
+include lib/foundry-env/base.mk
+
+# The (contract) name of your deployment script
+DEPLOYMENT_SCRIPT := DeployTokenVoting
+
+## Custom commands:
+
+.PHONY: my-command
+my-command: ## Description of my-command
+	echo "Using $(RPC_URL)"
+
+.PHONY: my-script
+my-script: ## Running a script by name
+	make run-script name=MyCustomScript
+```
+
+### Reusing common recipes
+
+The main goal of `foundry-env` is to avoid figuring out the same settings many times for each network. To this end, several recipes are available for you to extend.
+
+#### Running or simulating scripts
+
+```make
+.PHONY: preseed
+preseed: ## Simulate calling SeedScript
+	@echo "Simulating SeedScript"
+
+	@make simulate-script name="SeedScript"
+
+.PHONY: seed
+seed: test ## Run the SeedScript and verify any new contracts
+	@echo "Running SeedScript"
+	@mkdir -p $(LOGS_FOLDER)
+
+	@make run-script name="SeedScript" 2>&1 | tee -a $(LOGS_FOLDER)/seed.log
+```
+
+- Extending `make simulate-script` will do a dry run without bradcasting any transaction
+- Extending `make run-script` will populate all the necessary settings for the chosen network and broadcast the transactions triggered by the script from the wallet associated to `DEPLOYMENT_PRIVATE_KEY`
+
+#### Running your tests
+
+```make
+# Default value for `v` if no `v="..."` is specified
+test-fork: v ?= **
+
+.PHONY: test-unit
+test-unit: ## Run unit tests
+	@make run-test-local \
+	    arg='--no-match-path "./test/**/fork/*.sol"'
+
+.PHONY: test-fork
+test-fork: ## Run fork tests                       [optional: v="v1_2_0"]
+	@make run-test \
+	    arg='--match-path "./test/$(v)/fork/*.sol" --rpc-url $(RPC_URL)'
+```
+
+Both test helpers provide useful defaults while allowing you to pass extra parameters via `args='...'`.
+
+- Extending `make run-test-local` will unset `ETHERSCAN_API_KEY`, making local tests run faster
+- Extending `make run-test` will run tests in default mode, allowing to run fork tests and similar
+
+## Included settings
+
+The `base.mk` file is in charge of *computing* the commands to run, given the network environment variables defined by `lib/foundry-env/.env`.
+
+For every (supported) network, the following variable names are provided:
+
+```env
 # Used by Foundry
-RPC_URL="https://eth-mainnet.g.alchemy.com/v2/__API_KEY__"
-CHAIN_ID="1"
+RPC_URL="https://eth-sepolia.g.alchemy.com/v2/__ALCHEMY_API_KEY__"
+CHAIN_ID="11155111"
 
 # Used for log file names
-NETWORK_NAME="mainnet"
+NETWORK_NAME="sepolia"
 
-# SOURCE VERIFICATION (https://etherscan.io/)
-# ---------------------------------------------------
+# Verification
 VERIFIER="etherscan"
+# BLOCKSCOUT_HOST_NAME="..."  # When applicable
 
-ETHERSCAN_API_KEY="" # REQUIRED
+# OSx deployment
+DAO_FACTORY_ADDRESS="0xB815791c233807D39b7430127975244B36C19C8e"
+PLUGIN_REPO_FACTORY_ADDRESS="0x399Ce2a71ef78bE6890EB628384dD09D4382a7f0"
+PLUGIN_SETUP_PROCESSOR_ADDRESS="0xC24188a73dc09aA7C721f96Ad8857B469C01dC9f"
 
-# DEPLOYED DEPENDENCIES (OSX)
-# ---------------------------------------------------
-# Used to deploy the contracts and to run fork tests.
-#
-# Pick the right addresses from:
-# https://github.com/aragon/osx/blob/main/packages/artifacts/src/addresses.json
-# https://github.com/aragon/token-voting-plugin/blob/main/npm-artifacts/src/addresses.json
+MANAGEMENT_DAO_ADDRESS="0xCa834B3F404c97273f34e108029eEd776144d324"
+MANAGEMENT_DAO_MULTISIG_ADDRESS="0xfcEAd61339e3e73090B587968FcE8b090e0600EF"
+```
 
-DAO_FACTORY_ADDRESS="0x246503df057A9a85E0144b6867a828c99676128B"
-PLUGIN_REPO_FACTORY_ADDRESS="0xcf59C627b7a4052041C4F16B4c635a960e29554A"
-PLUGIN_SETUP_PROCESSOR_ADDRESS="0xE978942c691e43f65c1B7c7F8f1dc8cDF061B13f"
+For networks where the `RPC_URL` variable uses an Alchemy endpoint, make sure that your `.env` file includes the `ALCHEMY_API_KEY="..."` secret.
 
-# DEPLOYMENT PARAMETERS
-# ---------------------------------------------------
+## Overriding default values
 
-# Existing repo (new build)
-PLUGIN_REPO_ADDRESS="0xb7401cD221ceAFC54093168B814Cc3d42579287f"  # Example for TokenVoting
-MANAGEMENT_DAO_MULTISIG_ADDRESS="0x0673c13D48023efA609C20E5E351763B99Dd67DE"
+If the network's `.env` file provides a value that you need to override, you can do so in your own `.env` file at the project root.
 
-# New plugin repo (first build)
-PLUGIN_ENS_SUBDOMAIN="" # A random value is used if empty
-PLUGIN_REPO_MAINTAINER_ADDRESS=""
+Env variables are imported in this order:
 
-RELEASE_METADATA_URI="ipfs://QmWjZArvePnMPgbfKAMW3TidbqHEy68UV6SvRBhiaygGta"  # Example for TokenVoting
-BUILD_METADATA_URI="ipfs://QmfXUy5Lc4iqg8DvgWdSSD2ZhCmCGvE2WTdWYFE9sosCRc"  # Example for TokenVoting
+1. Read `lib/foundry-env/networks/<network>/.env`
+2. Read your `.env` (this overrides any defaults from above)
+3. Prepare the `make` commands and arguments
 
-# Other
+You can also override `make` variables by passing them as CLI arguments:
 
-PINATA_JWT=""
+```sh
+make deploy RPC_URL="https://sepolia.drpc.org"
+```
+
+## Self documenting tasks
+
+Using `make` or `make help` is the preferred way to get a useful summary of the available commands.
+
+To expand `make help` with your custom commands, edit your `Makefile` and add comments starting by `##` as shown below:
+
+```make
+# This comment is ignored
+
+my-internal-cmd:
+	echo "Not part of make help"
+
+# `make help` is triggered when using `##` comments
+
+# The line below will appear as a section title
+## My commands:
+
+my-cmd: ## This will appear when running `make help`
+	echo "Hi cmd"
+
+# The empty comment below (##) will turn into a separator
+##
+
+my-script: dependency ## This will also appear when running `make help`
+	echo "Hi script"
+```
+
+## Troubleshooting helpers
+
+While `make help` will show you the tasks with a `##` comment, there are additional troubleshooting helpers available.
+
+Check that the wallet has enough balance:
+
+```sh
+$ make balance
+Balance of 0x1147557Ed36d902E17b9180BFc144526518e148e (sepolia):
+5.51998258705224007
+```
+
+Check for gas price spikes:
+
+```sh
+$ make gas-price
+Gas price (sepolia):
+1000015
+```
+
+If some transactions get stuck, replace them by zero transfer's with a higher gas price:
+
+```sh
+$ make clean-nonce nonce=27
+```
+
+Wipe multiple stuck transactions at once:
+
+```sh
+$ make clean-nonces nonces="2 3 4 5"
 ```
 
 ## Documentation & Support
 
 - [Aragon OSx Docs](https://docs.aragon.org/osx/)
-- [TokenVoting Plugin](https://github.com/aragon/token-voting-plugin)
 - [Foundry Book](https://getfoundry.sh/)
 
 ## Contributing
 
 Found a missing address or outdated config? Open an issue or PR!
-
