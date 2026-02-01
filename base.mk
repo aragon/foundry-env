@@ -17,7 +17,11 @@ FOUNDRY_ENV_DIR := $(patsubst %/,%,${FOUNDRY_ENV_DIR})
 # CONSTANTS
 
 SUPPORTED_VERIFIERS := etherscan blockscout sourcify zksync routescan-mainnet routescan-testnet
-SUPPORTED_NETWORKS := $(shell ls $(FOUNDRY_ENV_DIR)/networks | xargs echo)
+# Networks from both project root (./networks) and library (lib/foundry-env/networks)
+# Project networks take precedence over library networks
+LIB_NETWORKS := $(shell ls $(FOUNDRY_ENV_DIR)/networks 2>/dev/null | xargs echo)
+PROJECT_NETWORKS := $(shell ls ./networks 2>/dev/null | xargs echo)
+SUPPORTED_NETWORKS := $(sort $(LIB_NETWORKS) $(PROJECT_NETWORKS))
 TEST_COVERAGE_SOURCES := $(wildcard test/*.sol test/**/*.sol src/*.sol src/**/*.sol)
 ARTIFACTS_FOLDER := ./artifacts
 LOGS_FOLDER := ./logs
@@ -147,12 +151,29 @@ switch: ## Starts using the given network              [network="..."]
 		echo ; \
 		echo "Supported networks:" ; \
 		echo -n "  " ; \
-		ls $(FOUNDRY_ENV_DIR)/networks/ | xargs echo ; \
+		echo "$(SUPPORTED_NETWORKS)" ; \
 		echo ; \
 		exit 1 ; \
 	fi
-	rm -f $(FOUNDRY_ENV_DIR)/.env
-	ln -s ./networks/$(network)/.env  $(FOUNDRY_ENV_DIR)/.env
+	@rm -f $(FOUNDRY_ENV_DIR)/.env
+	@LIB_ENV="$(FOUNDRY_ENV_DIR)/networks/$(network)/.env" ; \
+	PROJECT_ENV="./networks/$(network)/.env" ; \
+	if [ -f "$$LIB_ENV" ] && [ -f "$$PROJECT_ENV" ]; then \
+		cat "$$LIB_ENV" > $(FOUNDRY_ENV_DIR)/.env ; \
+		echo "" >> $(FOUNDRY_ENV_DIR)/.env ; \
+		echo "# Project overrides from $$PROJECT_ENV" >> $(FOUNDRY_ENV_DIR)/.env ; \
+		cat "$$PROJECT_ENV" >> $(FOUNDRY_ENV_DIR)/.env ; \
+		echo "Using library + project overlay: $$LIB_ENV + $$PROJECT_ENV" ; \
+	elif [ -f "$$PROJECT_ENV" ]; then \
+		ln -s ../../networks/$(network)/.env $(FOUNDRY_ENV_DIR)/.env ; \
+		echo "Using project network: $$PROJECT_ENV" ; \
+	elif [ -f "$$LIB_ENV" ]; then \
+		ln -s ./networks/$(network)/.env $(FOUNDRY_ENV_DIR)/.env ; \
+		echo "Using library network: $$LIB_ENV" ; \
+	else \
+		echo "Error: Network '$(network)' not found in ./networks/ or $(FOUNDRY_ENV_DIR)/networks/" ; \
+		exit 1 ; \
+	fi
 
 .PHONY: clean
 clean: ## Clean the compiler artifacts
