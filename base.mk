@@ -23,7 +23,7 @@ trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
 # CONSTANTS
 
 SUPPORTED_VERIFIERS := etherscan blockscout sourcify zksync routescan-mainnet routescan-testnet
-SUPPORTED_NETWORKS := $(shell ls $(FOUNDRY_ENV_DIR)/networks 2>/dev/null | xargs echo)
+SUPPORTED_NETWORKS := $(shell ls $(FOUNDRY_ENV_DIR)/networks | xargs echo)
 TEST_COVERAGE_SOURCES := $(wildcard test/*.sol test/**/*.sol src/*.sol src/**/*.sol)
 ARTIFACTS_FOLDER := ./artifacts
 LOGS_FOLDER := ./logs
@@ -155,12 +155,11 @@ switch: ## Starts using the given network              [network="..."]
 		exit 1 ; \
 	fi
 	@rm -f $(FOUNDRY_ENV_DIR)/.env
-	@if [ -f "$(FOUNDRY_ENV_DIR)/networks/$(network)/.env" ]; then \
-		ln -s ./networks/$(network)/.env $(FOUNDRY_ENV_DIR)/.env ; \
-		echo "Using network: $(network)" ; \
+	@ln -s ./networks/$(network)/.env $(FOUNDRY_ENV_DIR)/.env
+	@if [ -f ".env.$(network)" ]; then \
+		echo "Using network: $(network) (with .env.$(network) overrides)" ; \
 	else \
-		echo "Error: Network '$(network)' not found in $(FOUNDRY_ENV_DIR)/networks/" ; \
-		exit 1 ; \
+		echo "Using network: $(network)" ; \
 	fi
 
 .PHONY: clean
