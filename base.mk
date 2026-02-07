@@ -281,6 +281,11 @@ help: ## Show the main recipes
 
 # TROUBLESHOOTING HELPERS
 
+.PHONY: env
+env: ## Show the current environment variables
+	@$(FOUNDRY_ENV_DIR)/scripts/show-env.sh \
+		$(FOUNDRY_ENV_DIR)/.env .env.$(NETWORK_NAME) .env
+
 .PHONY: gas-price
 gas-price:
 	@echo "Gas price ($(NETWORK_NAME)):"
