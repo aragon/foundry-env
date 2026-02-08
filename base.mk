@@ -12,7 +12,7 @@ FOUNDRY_ENV_DIR := $(patsubst %/,%,${FOUNDRY_ENV_DIR})
 
 # Helper functions
 trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
-resolve_op = $(if $(findstring op://,$1),$(shell op read "$(call trim_quotes,$1)"),$(call trim_quotes,$1))
+resolve_op = $(if $(findstring op://,$1),$(or $(shell op read "$(call trim_quotes,$1)" 2>/dev/null),$(call trim_quotes,$1)),$(call trim_quotes,$1))
 
 # Load project-specific network overrides (e.g., .env.mainnet, .env.sepolia)
 -include .env.$(call trim_quotes,$(NETWORK_NAME))
@@ -23,11 +23,17 @@ resolve_op = $(if $(findstring op://,$1),$(shell op read "$(call trim_quotes,$1)
 # Ordered list of env files (used by op resolution and `make env`)
 ENV_FILES := $(FOUNDRY_ENV_DIR)/.env $(wildcard .env.$(call trim_quotes,$(NETWORK_NAME))) .env
 
-# Resolve op:// secret references via 1Password CLI (opt-in, no-op if no op:// values)
-$(foreach var, \
-    $(shell grep -h '^[A-Z_][A-Z_0-9]*=' $(ENV_FILES) 2>/dev/null | cut -d= -f1 | sort -u), \
-    $(if $(findstring op://,$($(var))),$(eval $(var) := $(call resolve_op,$($(var))))) \
-)
+# Resolve op:// secret references via 1Password CLI
+_ENV_VAR_NAMES := $(shell grep -h '^[A-Z_][A-Z_0-9]*=' $(ENV_FILES) 2>/dev/null | cut -d= -f1 | sort -u)
+
+ifneq ($(shell command -v op 2>/dev/null),)
+$(foreach var,$(_ENV_VAR_NAMES),$(if $(findstring op://,$($(var))),\
+    $(eval $(var) := $(call resolve_op,$($(var))))\
+    $(if $(findstring op://,$($(var))),$(warning $(var): secret not found in 1Password — check the vault and item exist))))
+else
+$(foreach var,$(_ENV_VAR_NAMES),$(if $(findstring op://,$($(var))),\
+    $(warning $(var): 1Password CLI (op) not installed — cannot resolve op:// references)))
+endif
 
 
 # CONSTANTS
