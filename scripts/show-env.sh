@@ -18,7 +18,11 @@ if [ -z "$files" ]; then
   exit 1
 fi
 
-awk '
+# Check if 1Password CLI is available
+has_op=""
+command -v op >/dev/null 2>&1 && has_op=1
+
+awk -v has_op="$has_op" '
 # Replaces the middle of a value with asterisks, keeping first 4 and last 4 chars.
 # Short values (<= 8 chars) are fully masked.
 function mask(val,    len, mid, i, masked) {
@@ -83,7 +87,17 @@ END {
       if (sources[name] != source) continue
       value = vars[name]
 
-      if (name ~ /(KEY|PRIVATE|SECRET|JWT|PASSWORD)/)
+      # Resolve op:// secret references via 1Password CLI
+      if (has_op && value ~ /^op:\/\//) {
+        cmd = "op read \"" value "\" 2>/dev/null"
+        cmd | getline resolved
+        close(cmd)
+        if (resolved != "") value = resolved
+      }
+
+      if (value ~ /^op:\/\//)
+        value = "(op:// unresolved)"
+      else if (name ~ /(KEY|PRIVATE|SECRET|JWT|PASSWORD)/)
         value = mask(value)
 
       printf "  %-40s %s\n", name, value

@@ -214,7 +214,8 @@ Env variables are imported in this order:
 1. Read `lib/foundry-env/networks/<network>/.env`
 2. Read `.env.<network>` from the project root (if it exists)
 3. Read your `.env` (this overrides any defaults from above)
-4. Prepare the `make` commands and arguments
+4. Resolve any `op://` secret references (if using 1Password CLI)
+5. Prepare the `make` commands and arguments
 
 ### Per-network project settings
 
@@ -239,6 +240,26 @@ You can also override `make` variables by passing them as CLI arguments:
 ```sh
 make deploy RPC_URL="https://sepolia.drpc.org"
 ```
+
+## 1Password integration
+
+Instead of storing secrets as plaintext in `.env`, you can use [1Password CLI](https://developer.1password.com/docs/cli/) secret references. Any `.env` value starting with `op://` is resolved automatically:
+
+```env
+# .env
+DEPLOYMENT_PRIVATE_KEY="op://Aragon/Foundry Dev/private-key"
+ETHERSCAN_API_KEY="op://Aragon/Etherscan/api-key"
+ALCHEMY_API_KEY="op://Aragon/Alchemy/api-key"
+
+# Non-secret values work as usual
+REFUND_ADDRESS="0x..."
+```
+
+This works for any variable in any of the loaded `.env` files, including project-specific ones. If no `op://` references are present, nothing changes.
+
+To get the `op://` path for a secret, open the item in 1Password, click the dropdown menu next to the field and select **Copy Secret Reference**.
+
+Requires the [1Password CLI](https://developer.1password.com/docs/cli/) (`op`) to be installed and authenticated.
 
 ## Self documenting tasks
 
