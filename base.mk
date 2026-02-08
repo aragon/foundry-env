@@ -377,22 +377,3 @@ run-test:
 install-foundry:
 	@echo "Installing Foundry..."
 	curl -L https://foundry.paradigm.xyz | bash
-
-# .PHONY: init-keystore
-# init-keystore:
-# 	@# DEV (no password)
-# 	@if $$(cast wallet list | grep "Develop" > /dev/null) ; then \
-# 	    echo "Develop keystore: ready" ; \
-# 	else \
-# 		echo "Enter the private key of your development wallet (keystore):" ; \
-# 		read PRIV_K ; \
-# 		cast wallet import "Develop" --private-key "$$PRIV_K" --unsafe-password "" ; \
-# 	fi
-# 	@# PROD (password protected)
-# 	@if $$(cast wallet list | grep "Deploy" > /dev/null) ; then \
-# 	    echo "Deploy keystore: ready" ; \
-# 	else \
-# 		echo "Enter the private key of your deployment wallet (keystore):" ; \
-# 		read PRIV_K ; \
-# 		cast wallet import "Deploy" --private-key "$$PRIV_K" ; \
-# 	fi
