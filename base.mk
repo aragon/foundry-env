@@ -77,7 +77,7 @@ else ifeq ($(VERIFIER), blockscout)
 	VERIFIER_PARAMS = --verifier $(VERIFIER) --verifier-url "$(VERIFIER_URL)"
 else ifeq ($(VERIFIER), sourcify)
 	# Inhibit it, so that Foundry doesn't switch to Etherscan, regardless
-	export ETHERSCAN_API_KEY:=""
+	export ETHERSCAN_API_KEY:=
 else ifeq ($(VERIFIER), zksync)
 	ifeq ($(CHAIN_ID),300)
 		VERIFIER_URL := https://explorer.sepolia.era.zksync.dev/contract_verification
@@ -332,11 +332,10 @@ run-script:
 		$(VERIFIER_PARAMS) \
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS) \
-		$(VERBOSITY) \
-		$(args)
+		$(VERBOSITY) $(args)
 
 # Running local tests faster, unsetting the API key
-run-test-local: export ETHERSCAN_API_KEY:=""
+run-test-local: export ETHERSCAN_API_KEY:=
 
 .PHONY: run-test-local
 run-test-local:
