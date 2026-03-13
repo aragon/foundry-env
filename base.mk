@@ -77,7 +77,7 @@ else ifeq ($(VERIFIER), blockscout)
 	VERIFIER_PARAMS = --verifier $(VERIFIER) --verifier-url "$(VERIFIER_URL)"
 else ifeq ($(VERIFIER), sourcify)
 	# Inhibit it, so that Foundry doesn't switch to Etherscan, regardless
-	export ETHERSCAN_API_KEY:=""
+	export ETHERSCAN_API_KEY:=
 else ifeq ($(VERIFIER), zksync)
 	ifeq ($(CHAIN_ID),300)
 		VERIFIER_URL := https://explorer.sepolia.era.zksync.dev/contract_verification
@@ -121,7 +121,8 @@ export PLUGIN_REPO_FACTORY_ADDRESS:=$(call trim_quotes,$(PLUGIN_REPO_FACTORY_ADD
 export PLUGIN_SETUP_PROCESSOR_ADDRESS:=$(call trim_quotes,$(PLUGIN_SETUP_PROCESSOR_ADDRESS))
 export MANAGEMENT_DAO_ADDRESS:=$(call trim_quotes,$(MANAGEMENT_DAO_ADDRESS))
 export MANAGEMENT_DAO_MULTISIG_ADDRESS:=$(call trim_quotes,$(MANAGEMENT_DAO_MULTISIG_ADDRESS))
-
+export NETWORK_NAME:=$(NETWORK_NAME)
+export CHAIN_ID:=$(CHAIN_ID)
 
 # PUBLIC TARGETS
 
@@ -314,7 +315,8 @@ simulate-script:
 	forge script $(name) \
 		--rpc-url $(RPC_URL) \
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
-		$(FORGE_SCRIPT_CUSTOM_PARAMS)
+		$(FORGE_SCRIPT_CUSTOM_PARAMS) \
+		$(VERBOSITY)
 
 # Example:
 # make run-script name="MyScriptName"
@@ -330,10 +332,10 @@ run-script:
 		$(VERIFIER_PARAMS) \
 		$(FORGE_BUILD_CUSTOM_PARAMS) \
 		$(FORGE_SCRIPT_CUSTOM_PARAMS) \
-		$(args)
+		$(VERBOSITY) $(args)
 
 # Running local tests faster, unsetting the API key
-run-test-local: export ETHERSCAN_API_KEY:=""
+run-test-local: export ETHERSCAN_API_KEY:=
 
 .PHONY: run-test-local
 run-test-local:
