@@ -285,6 +285,10 @@ balance:
 	@BALANCE=$$(cast balance $(DEPLOYMENT_ADDRESS) --rpc-url $(RPC_URL)) && \
 		cast --to-unit $$BALANCE ether
 
+.PHONY: nonce
+nonce:
+	cast nonce $(DEPLOYMENT_ADDRESS) --rpc-url $(RPC_URL)
+
 .PHONY: clean-nonces
 clean-nonces: # make clean-nonces nonces="2 3 4 5"
 	for nonce in $(nonces); do \
