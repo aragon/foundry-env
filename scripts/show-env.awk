@@ -1,24 +1,10 @@
-#!/usr/bin/env bash
 # Shows environment variables from all env files, with sensitive values masked.
-# Usage: show-env.sh <env_file1> [env_file2] [env_file3]
 #
 # Files are processed in order — later values override earlier ones.
 # Sensitive vars (name contains KEY, PRIVATE, SECRET, JWT, PASSWORD)
 # are masked preserving length: first 4 + last 4 chars visible, middle replaced with *.
 # Values <= 8 chars are fully masked.
 
-# Filter to only existing files
-files=""
-for f in "$@"; do
-  [ -f "$f" ] && files="$files $f"
-done
-
-if [ -z "$files" ]; then
-  echo "No env files found"
-  exit 1
-fi
-
-awk '
 # Replaces the middle of a value with asterisks, keeping first 4 and last 4 chars.
 # Short values (<= 8 chars) are fully masked.
 function mask(val,    len, mid, i, masked) {
@@ -36,7 +22,7 @@ function mask(val,    len, mid, i, masked) {
 # Removes surrounding double or single quotes from a value.
 function strip_quotes(val) {
   if (val ~ /^".*"$/) val = substr(val, 2, length(val) - 2)
-  else if (val ~ /^'\''.*'\''$/) val = substr(val, 2, length(val) - 2)
+  else if (val ~ /^'.*'$/) val = substr(val, 2, length(val) - 2)
   return val
 }
 
@@ -90,4 +76,3 @@ END {
     }
   }
 }
-' $files
