@@ -193,7 +193,7 @@ report/index.html: lcov.info.pruned
 
 lcov.info.pruned: lcov.info
 	lcov --remove $(^) -o $(@) \
-		'test/**/*.sol' 'test/*.sol' 'script/**/*.sol' 'script/*.sol'
+		'test/**/*.sol' 'script/**/*.sol'
 
 lcov.info: $(TEST_COVERAGE_SOURCES)
 	forge coverage --report lcov
