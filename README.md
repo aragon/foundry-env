@@ -267,7 +267,7 @@ my-script: dependency ## This will also appear when running `make help`
 	echo "Hi script"
 ```
 
-## Troubleshooting helpers
+## Troubleshooting and helpers
 
 While `make help` will show you the tasks with a `##` comment, there are additional troubleshooting helpers available.
 
@@ -287,15 +287,26 @@ Gas price (sepolia):
 1000015
 ```
 
+Check the storage layout of a contract:
+
+```sh
+make storage-info
+```
+
 If some transactions get stuck, replace them by zero transfer's with a higher gas price:
 
 ```sh
+# Show the current nonce
+$ make nonce
+```
+
+```sh
+# Submit a zero transfer replacement
 $ make clean-nonce nonce=27
 ```
 
-Wipe multiple stuck transactions at once:
-
 ```sh
+# Wipe multiple stuck transactions at once:
 $ make clean-nonces nonces="2 3 4 5"
 ```
 

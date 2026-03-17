@@ -234,6 +234,14 @@ anvil: ## Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER
 
 refund: export DEPLOYMENT_PRIVATE_KEY:=$(DEPLOYMENT_PRIVATE_KEY)
 
+.PHONY: storage-info
+storage-info: ## Show the storage layout of a contract
+	@if [ -z "$(src)" ] ; then \
+		printf "Usage:\n   $$ make $(@) src=./MyContract.t.sol\n" ; \
+		exit 1 ; \
+	fi
+	forge inspect $(src) storageLayout
+
 .PHONY: refund
 refund: ## Transfer the balance left on the deployment account
 	@echo "Refunding the balance left on $(DEPLOYMENT_ADDRESS)"
