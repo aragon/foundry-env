@@ -282,6 +282,13 @@ help: ## Show the main recipes
 
 # TROUBLESHOOTING HELPERS
 
+ENV_FILES = $(wildcard $(FOUNDRY_ENV_DIR)/.env .env.$(NETWORK_NAME) .env)
+
+.PHONY: env
+env: ## Show the current environment variables
+	@if [ -z "$(ENV_FILES)" ]; then echo "No env files found"; exit 1; fi
+	@awk -f $(FOUNDRY_ENV_DIR)/scripts/show-env.awk $(ENV_FILES)
+
 .PHONY: gas-price
 gas-price:
 	@echo "Gas price ($(NETWORK_NAME)):"
