@@ -170,7 +170,7 @@ clean: ## Clean the compiler artifacts
 
 ## Testing:
 
-fork-test: export RPC_URL:=$(RPC_URL)
+test-fork: export RPC_URL:=$(RPC_URL)
 test-coverage: export RPC_URL:=$(RPC_URL)
 
 .PHONY: test
@@ -178,8 +178,8 @@ test: ## Run all tests (local)
 	@make run-test-local \
 	    args='--no-match-path "./test/*fork*/*.sol"'
 
-.PHONY: fork-test
-fork-test: ## Run all fork tests (exporting RPC_URL env)
+.PHONY: test-fork
+test-fork: ## Run all fork tests (exporting RPC_URL env)
 	@make run-test \
 	    args='--match-path "./test/*fork*/*.sol" --rpc-url $(RPC_URL)'
 
