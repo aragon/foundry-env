@@ -30,11 +30,13 @@ git submodule add https://github.com/aragon/foundry-env.git lib/foundry-env
 Create a minimal `Makefile` on your project root:
 
 ```make
-# .env is imported by base.mk
-include lib/foundry-env/base.mk
+# Your overrides:
 
 # The contract name of your deployment script (default)
 DEPLOYMENT_SCRIPT ?= DeployTokenVoting
+
+# .env is imported by base.mk
+include lib/foundry-env/base.mk
 ```
 
 Next, create the `.env` file with your secrets and settings:
