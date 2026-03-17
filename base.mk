@@ -10,6 +10,12 @@ FOUNDRY_ENV_DIR := $(dir $(filter %/base.mk,$(MAKEFILE_LIST)))
 FOUNDRY_ENV_DIR := $(patsubst %/,%,${FOUNDRY_ENV_DIR})
 -include $(FOUNDRY_ENV_DIR)/.env
 
+# Helper functions
+trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
+
+# Load project-specific network overrides (e.g., .env.mainnet, .env.sepolia)
+-include .env.$(call trim_quotes,$(NETWORK_NAME))
+
 # Load the .env file from the project root
 -include .env
 
@@ -22,9 +28,6 @@ TEST_COVERAGE_SOURCES := $(wildcard test/*.sol test/**/*.sol src/*.sol src/**/*.
 ARTIFACTS_FOLDER := ./artifacts
 LOGS_FOLDER := ./logs
 VERBOSITY ?= -vvv
-
-# Helper functions
-trim_quotes = $(strip $(subst ',,$(subst ",,$1)))
 
 # Clean constants (env)
 VERIFIER := $(call trim_quotes,$(VERIFIER))
@@ -148,12 +151,17 @@ switch: ## Starts using the given network              [network="..."]
 		echo ; \
 		echo "Supported networks:" ; \
 		echo -n "  " ; \
-		ls $(FOUNDRY_ENV_DIR)/networks/ | xargs echo ; \
+		echo "$(SUPPORTED_NETWORKS)" ; \
 		echo ; \
 		exit 1 ; \
 	fi
-	rm -f $(FOUNDRY_ENV_DIR)/.env
-	ln -s ./networks/$(network)/.env  $(FOUNDRY_ENV_DIR)/.env
+	@rm -f $(FOUNDRY_ENV_DIR)/.env
+	@ln -s ./networks/$(network)/.env $(FOUNDRY_ENV_DIR)/.env
+	@if [ -f ".env.$(network)" ]; then \
+		echo "Using network: $(network) (with .env.$(network) overrides)" ; \
+	else \
+		echo "Using network: $(network)" ; \
+	fi
 
 .PHONY: clean
 clean: ## Clean the compiler artifacts

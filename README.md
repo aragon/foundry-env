@@ -212,8 +212,27 @@ If the network's `.env` file provides a value that you need to override, you can
 Env variables are imported in this order:
 
 1. Read `lib/foundry-env/networks/<network>/.env`
-2. Read your `.env` (this overrides any defaults from above)
-3. Prepare the `make` commands and arguments
+2. Read `.env.<network>` from the project root (if it exists)
+3. Read your `.env` (this overrides any defaults from above)
+4. Prepare the `make` commands and arguments
+
+### Per-network project settings
+
+If your project needs custom environment variables that change per network (e.g., contract addresses specific to your project), you can create `.env.<network>` files at the project root:
+
+```env
+# .env.mainnet
+TAIKO_BRIDGE="0x..."
+MY_TOKEN_ADDRESS="0x..."
+```
+
+```env
+# .env.sepolia
+TAIKO_BRIDGE="0x..."
+MY_TOKEN_ADDRESS="0x..."
+```
+
+These files are automatically loaded when the corresponding network is active, so running `make switch network=mainnet` will pick up `.env.mainnet` without any manual changes.
 
 You can also override `make` variables by passing them as CLI arguments:
 
@@ -284,6 +303,10 @@ $ make clean-nonces nonces="2 3 4 5"
 
 - [Aragon OSx Docs](https://docs.aragon.org/osx/)
 - [Foundry Book](https://getfoundry.sh/)
+
+## Adding new networks
+
+To add support for a new network, open a PR adding a `networks/<name>/.env` file to this repository.
 
 ## Contributing
 
