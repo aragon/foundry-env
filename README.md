@@ -24,7 +24,7 @@ Most Aragon plugins need to:
 
 ```sh
 # Add the submodule
-git submodule add git@github.com:aragon/foundry-env.git lib/foundry-env
+git submodule add https://github.com/aragon/foundry-env.git lib/foundry-env
 ```
 
 Create a minimal `Makefile` on your project root:
