@@ -170,7 +170,7 @@ clean: ## Clean the compiler artifacts
 
 ## Testing:
 
-fork-test: export RPC_URL:=$(RPC_URL)
+test-fork: export RPC_URL:=$(RPC_URL)
 test-coverage: export RPC_URL:=$(RPC_URL)
 
 .PHONY: test
@@ -178,8 +178,8 @@ test: ## Run all tests (local)
 	@make run-test-local \
 	    args='--no-match-path "./test/*fork*/*.sol"'
 
-.PHONY: fork-test
-fork-test: ## Run all fork tests (exporting RPC_URL env)
+.PHONY: test-fork
+test-fork: ## Run all fork tests (exporting RPC_URL env)
 	@make run-test \
 	    args='--match-path "./test/*fork*/*.sol" --rpc-url $(RPC_URL)'
 
@@ -193,7 +193,7 @@ report/index.html: lcov.info.pruned
 
 lcov.info.pruned: lcov.info
 	lcov --remove $(^) -o $(@) \
-		'test/**/*.sol' 'test/*.sol' 'script/**/*.sol' 'script/*.sol'
+		'test/**/*.sol' 'script/**/*.sol'
 
 lcov.info: $(TEST_COVERAGE_SOURCES)
 	forge coverage --report lcov
@@ -233,6 +233,14 @@ anvil: ## Starts a forked EVM, using RPC_URL   [optional: .env FORK_BLOCK_NUMBER
 	anvil -f $(RPC_URL) $(FORK_TEST_PARAMS)
 
 refund: export DEPLOYMENT_PRIVATE_KEY:=$(DEPLOYMENT_PRIVATE_KEY)
+
+.PHONY: storage-info
+storage-info: ## Show the storage layout of a contract
+	@if [ -z "$(src)" ] ; then \
+		printf "Usage:\n   $$ make $(@) src=./MyContract.t.sol\n" ; \
+		exit 1 ; \
+	fi
+	forge inspect $(src) storageLayout
 
 .PHONY: refund
 refund: ## Transfer the balance left on the deployment account
