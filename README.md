@@ -1,6 +1,8 @@
-# Foundry ENV for OSx
+# ⚠️ Deprecated: Foundry ENV for OSx
 
-**Standardized, network-ready Foundry setups for Aragon OSx projects.**
+**This repository is deprecated. Please use [aragon/just-foundry](https://github.com/aragon/just-foundry) instead.**
+
+Standardized, network-ready Foundry setups for Aragon OSx projects.
 
 This repository provides a **reusable foundation** for all Aragon OSx projects built with Foundry. It delivers:
 
