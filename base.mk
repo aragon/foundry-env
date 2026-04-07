@@ -110,6 +110,8 @@ else ifeq ($(CHAIN_ID),300)
 else ifeq ($(CHAIN_ID),324)
 	FORGE_SCRIPT_CUSTOM_PARAMS := --slow
 	FORGE_BUILD_CUSTOM_PARAMS := --zksync
+else ifeq ($(CHAIN_ID),374)
+	FORGE_SCRIPT_CUSTOM_PARAMS := --with-gas-price 0  --legacy --slow
 endif
 
 # Fork testing parameters
